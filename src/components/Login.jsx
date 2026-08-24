@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import './Login.css'
 import { supabase } from '../lib/supabaseClient'
-import fondo from '../assets/fondo.jpg'
+import fondo from '../assets/FONDO.jpg'
 
 function Login({ onLogin }) {
   const [modoRegistro, setModoRegistro] = useState(false)
@@ -97,7 +97,7 @@ function Login({ onLogin }) {
 
   return (
     <div className="login-page"
-    style={{ backgroundImage: `url(${fondo})` }}
+    style={{ backgroundImage: `url(${FONDO})` }}
     >
       <div className="login-overlay"></div>
 
