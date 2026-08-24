@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import './App.css'
-import fondo from './assets/FONDO.jpg'
+import fondo from './assets/fondo.jpg'
 import Login from './components/Login'
 import { supabase } from './lib/supabaseClient'
 
@@ -889,7 +889,7 @@ function App() {
       backgroundImage: `linear-gradient(
         rgba(255, 255, 255, 0.12),
         rgba(255, 255, 255, 0.12)
-      ), url(${FONDO})`,
+      ), url(${fondo})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',
