@@ -1,0 +1,3032 @@
+/* =========================
+   APP GENERAL
+========================= */
+
+.app {
+  min-height: 100vh;
+  color: #494747;
+}
+
+
+/* =========================
+   HEADER
+========================= */
+
+.header {
+  background-color: #1b1a1a;
+  padding: 25px 40px;
+  border-bottom: 1px solid #ddd;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 32px;
+}
+
+.header p {
+  margin: 5px 0 0;
+  color: #ffffff;
+}
+
+.container {
+  min-height: calc(100vh - 160px);
+  max-width: 900px;
+
+  margin: 0 auto;
+
+  padding:
+    40px
+    20px
+    40px;
+
+  box-sizing: border-box;
+
+  background: transparent;
+}
+
+
+/* =========================
+   FORMULARIO NUEVA TAREA
+========================= */
+
+.task-form {
+  background-color: white;
+  padding: 25px;
+  border-radius: 10px;
+  margin-bottom: 30px;
+}
+
+.task-form h2 {
+  margin-top: 0;
+}
+
+.task-form-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.task-form-row input {
+  flex: 1;
+}
+
+.task-form input {
+  width: 70%;
+  padding: 12px;
+  border: 1px solid #535151;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+.task-form select {
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: white;
+}
+
+.task-form button {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  background-color: #2563eb;
+  color: white;
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.task-form button:hover {
+  background-color: #1d4ed8;
+}
+
+.task-form button:active {
+  transform: scale(0.97);
+}
+
+
+/* =========================
+   LISTA DE TAREAS
+========================= */
+
+.task-list {
+  background-color: white;
+  padding: 25px;
+  border-radius: 10px;
+}
+
+.task-card {
+  position: relative;
+  overflow: visible;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 15px;
+  margin-top: 10px;
+
+  background-color: #f8f9fa;
+
+  border: 1px solid #ddd;
+  border-radius: 6px;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.task-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.task-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.task-name {
+  font-size: 16px;
+}
+
+.task-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.task-card button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+}
+
+
+/* =========================
+   COLOR LATERAL PRIORIDAD
+========================= */
+
+.task-priority-alta {
+  border-left: 5px solid #dc2626;
+}
+
+.task-priority-media {
+  border-left: 5px solid #d97706;
+}
+
+.task-priority-baja {
+  border-left: 5px solid #16a34a;
+}
+
+
+/* =========================
+   BOTÓN COMPLETAR
+========================= */
+
+.btn-completar {
+  background-color: #2563eb;
+}
+
+.btn-completar:hover {
+  background-color: #1d4ed8;
+}
+
+.btn-completado {
+  background-color: #16a34a;
+  cursor: default;
+}
+
+.btn-completado:disabled {
+  opacity: 1;
+}
+
+.task-completed .task-name {
+  text-decoration: line-through;
+  color: #777;
+}
+
+.completed-label {
+  padding: 6px 10px;
+  border-radius: 6px;
+
+  background-color: #16a34a;
+  color: white;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+
+/* =========================
+   MENÚ PRINCIPAL
+========================= */
+
+.menu-button {
+  width: 44px;
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: transparent;
+  color: white;
+
+  border: none;
+  border-radius: 8px;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.menu-button:hover {
+  background-color: #333333;
+}
+
+.menu-button:active {
+  transform: scale(0.95);
+}
+
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 1000;
+
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.menu-overlay.open {
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.sidebar {
+  position: absolute;
+
+  top: 0;
+  left: 0;
+
+  width: 280px;
+  height: 100vh;
+
+  box-sizing: border-box;
+
+  background-color: white;
+
+  padding: 20px;
+
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+
+  z-index: 1001;
+
+  transform: translateX(-100%);
+
+  transition: transform 0.3s ease;
+}
+
+.menu-overlay.open .sidebar {
+  transform: translateX(0);
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 30px;
+}
+
+.sidebar-header h2 {
+  margin: 0;
+}
+
+.close-menu {
+  width: 38px;
+  height: 38px;
+
+  border: none;
+  border-radius: 8px;
+
+  background-color: transparent;
+
+  font-size: 20px;
+
+  cursor: pointer;
+
+  transition: background-color 0.2s ease;
+}
+
+.close-menu:hover {
+  background-color: #f1f5f9;
+}
+
+.sidebar-option {
+  width: 100%;
+
+  padding: 13px 15px;
+  margin-bottom: 8px;
+
+  border: none;
+  border-radius: 8px;
+
+  background-color: transparent;
+
+  text-align: left;
+
+  font-size: 15px;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.sidebar-option:hover {
+  background-color: #f1f5f9;
+  transform: translateX(3px);
+}
+
+.overlay-background {
+  position: absolute;
+  inset: 0;
+
+  height: 100vh;
+
+  background-color: rgba(0, 0, 0, 0);
+
+  transition: background-color 0.3s ease;
+}
+
+.menu-overlay.open .overlay-background {
+  background-color: rgba(0, 0, 0, 0.18);
+}
+
+
+/* =========================
+   PRIORIDADES
+========================= */
+
+.prioridad {
+  padding: 4px 9px;
+  border-radius: 20px;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.prioridad-baja {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.prioridad-media {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.prioridad-alta {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+
+/* =========================
+   FECHA LÍMITE
+========================= */
+
+.fecha-limite {
+  padding: 4px 9px;
+  border-radius: 20px;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.fecha-a-tiempo {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.fecha-proxima {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.fecha-hoy {
+  background-color: #ffedd5;
+  color: #c2410c;
+}
+
+.fecha-vencida {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.task-date-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fecha-texto {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.texto-a-tiempo {
+  color: #15803d;
+}
+
+.texto-proxima {
+  color: #b45309;
+}
+
+.texto-hoy {
+  color: #c2410c;
+  font-weight: 600;
+}
+
+.texto-vencida {
+  color: #dc2626;
+}
+
+
+/* =========================
+   FECHA COMPLETADA
+========================= */
+
+.completed-date {
+  padding: 4px 9px;
+  border-radius: 20px;
+
+  background-color: #dcfce7;
+  color: #15803d;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+/* =========================
+   FECHA ELIMINADA
+========================= */
+
+.deleted-date {
+  padding: 4px 9px;
+  border-radius: 20px;
+
+  background-color: #f3f4f6;
+  color: #6b7280;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+/* =========================
+   BUSCADOR
+========================= */
+
+.search-container {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  margin-bottom: 20px;
+
+  padding: 0 14px;
+
+  background-color: #f8fafc;
+
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+.search-container svg {
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.search-container input {
+  width: 100%;
+
+  padding: 12px 0;
+
+  border: none;
+  outline: none;
+
+  background-color: transparent;
+
+  font-size: 15px;
+}
+
+
+/* =========================
+   FILTROS
+========================= */
+
+.filters {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  flex-wrap: wrap;
+
+  margin: 16px 0 20px;
+}
+
+.filter-button {
+  padding: 8px 16px;
+
+  border: 1px solid #d1d5db;
+  border-radius: 20px;
+
+  background-color: #ffffff;
+  color: #4b5563;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
+}
+
+.filter-button:hover {
+  background-color: #f3f6ff;
+  color: #2563eb;
+
+  border-color: #93b4ff;
+
+  transform: translateY(-1px);
+}
+
+.filter-button.active {
+  background-color: #2563eb;
+  color: #ffffff;
+
+  border-color: #2563eb;
+
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.22);
+}
+
+.filter-button:active {
+  transform: scale(0.96);
+}
+
+
+/* =========================
+   MENÚ TRES PUNTOS
+========================= */
+
+.task-menu-container {
+  position: relative;
+
+  /*
+    IMPORTANTE:
+    crea una capa superior para el menú.
+  */
+  z-index: 10;
+}
+
+.task-menu-button {
+  width: 36px;
+  height: 36px;
+
+  padding: 0 !important;
+
+  border: none;
+  border-radius: 8px;
+
+  background-color: #374151;
+  color: white;
+
+  font-size: 22px;
+  font-weight: bold;
+  line-height: 1;
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.task-menu-button:hover {
+  background-color: #31517e;
+
+  transform: scale(1.05);
+
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+.task-menu-button:active {
+  transform: scale(0.95);
+}
+
+.task-dropdown {
+  position: absolute;
+
+  top: calc(100% + 6px);
+  right: 0;
+
+  width: 150px;
+
+  box-sizing: border-box;
+
+  padding: 6px;
+
+  background-color: white;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.15);
+
+  /*
+    IMPORTANTE:
+    debe quedar sobre las tarjetas.
+  */
+  z-index: 999;
+
+  opacity: 0;
+
+  pointer-events: none;
+
+  transform:
+    translateY(-12px)
+    scale(0.94);
+
+  transform-origin: top right;
+
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+
+.task-dropdown.open {
+  opacity: 1;
+
+  pointer-events: auto;
+
+  transform:
+    translateY(0)
+    scale(1);
+
+  z-index: 999;
+}
+
+/*
+  ESTA ES LA CORRECCIÓN PRINCIPAL.
+
+  Cuando una tarjeta tenga abierto
+  su menú, toda esa tarjeta sube
+  por encima de las demás.
+*/
+
+.task-card:has(.task-dropdown.open) {
+  z-index: 100;
+}
+
+.task-dropdown button {
+  width: 100%;
+
+  padding: 10px 12px;
+
+  border: none;
+  border-radius: 7px;
+
+  background-color: transparent;
+  color: #374151;
+
+  text-align: left;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.task-dropdown button:hover {
+  background-color: #f3f4f6;
+
+  transform: translateX(2px);
+}
+
+.task-dropdown .delete-option {
+  color: #dc2626;
+}
+
+.task-dropdown .delete-option:hover {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+
+/* =========================
+   MODALES - FONDO
+========================= */
+
+.modal-overlay,
+.delete-overlay,
+.edit-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  width: 100%;
+  min-height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  box-sizing: border-box;
+
+  background-color: rgba(15, 23, 42, 0.45);
+
+  backdrop-filter: blur(2px);
+
+  z-index: 3000;
+}
+
+
+/* =========================
+   MODAL GENERAL
+========================= */
+
+.modal {
+  width: 420px;
+  max-width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 28px;
+
+  background-color: #ffffff;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.18),
+    0 4px 15px rgba(0, 0, 0, 0.08);
+
+  animation: modalEntrada 0.2s ease;
+}
+
+@keyframes modalEntrada {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(10px)
+      scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+
+/* =========================
+   MODAL ELIMINAR
+========================= */
+
+.modal-delete,
+.delete-modal {
+  width: 400px;
+  max-width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 30px;
+
+  background-color: #ffffff;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.18),
+    0 4px 15px rgba(0, 0, 0, 0.08);
+
+  text-align: center;
+
+  animation: modalEntrada 0.2s ease;
+}
+
+.delete-icon {
+  width: 60px;
+  height: 60px;
+
+  margin: 0 auto 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background-color: #fee2e2;
+
+  font-size: 28px;
+}
+
+.modal-delete h2,
+.delete-modal h2 {
+  margin: 0 0 10px;
+
+  color: #1f2937;
+
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.modal-delete p,
+.delete-modal p {
+  margin: 0 0 8px;
+
+  color: #4b5563;
+
+  font-size: 14px;
+
+  line-height: 1.5;
+}
+
+.modal-delete strong,
+.delete-modal strong {
+  color: #1f2937;
+}
+
+.delete-warning {
+  margin-top: 8px !important;
+
+  color: #9ca3af !important;
+
+  font-size: 13px !important;
+}
+
+
+/* =========================
+   ACCIONES MODAL
+========================= */
+
+.modal-actions,
+.delete-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 10px;
+
+  margin-top: 24px;
+}
+
+
+/* CANCELAR */
+
+.btn-cancelar,
+.btn-cancelar-eliminar {
+  min-width: 110px;
+
+  padding: 10px 18px;
+
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+
+  background-color: #ffffff;
+  color: #374151;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.btn-cancelar:hover,
+.btn-cancelar-eliminar:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.btn-cancelar:active,
+.btn-cancelar-eliminar:active {
+  transform: scale(0.97);
+}
+
+
+/* ELIMINAR */
+
+.btn-eliminar,
+.btn-confirmar-eliminar {
+  min-width: 110px;
+
+  padding: 10px 18px;
+
+  border: none;
+  border-radius: 8px;
+
+  background-color: #dc2626;
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 3px 8px
+    rgba(220, 38, 38, 0.2);
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
+}
+
+.btn-eliminar:hover,
+.btn-confirmar-eliminar:hover {
+  background-color: #b91c1c;
+
+  box-shadow:
+    0 5px 12px
+    rgba(220, 38, 38, 0.28);
+}
+
+.btn-eliminar:active,
+.btn-confirmar-eliminar:active {
+  transform: scale(0.97);
+}
+
+
+/* =========================
+   MODAL EDITAR
+========================= */
+
+.edit-modal {
+  width: 420px;
+  max-width: 90%;
+
+  box-sizing: border-box;
+
+  background-color: white;
+
+  padding: 25px;
+
+  border-radius: 12px;
+
+  box-shadow:
+    0 15px 40px
+    rgba(0, 0, 0, 0.2);
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 12px;
+}
+
+.edit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.edit-header h2 {
+  margin: 0;
+}
+
+.edit-close {
+  border: none;
+
+  background-color: transparent;
+
+  font-size: 20px;
+
+  cursor: pointer;
+}
+
+.edit-modal input,
+.edit-modal select {
+  padding: 11px;
+
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+
+  font-size: 14px;
+}
+
+.edit-actions {
+  display: flex;
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  margin-top: 10px;
+}
+
+.btn-guardar {
+  padding: 10px 16px;
+
+  border: none;
+  border-radius: 7px;
+
+  background-color: #2563eb;
+  color: white;
+
+  cursor: pointer;
+}
+
+.btn-guardar:hover {
+  background-color: #1d4ed8;
+}
+
+
+/* =========================
+   TOAST
+========================= */
+
+.toast {
+  position: fixed;
+
+  top: 25px;
+  right: 25px;
+
+  padding: 14px 20px;
+
+  border-radius: 10px;
+
+  color: white;
+
+  font-size: 15px;
+  font-weight: 500;
+
+  box-shadow:
+    0 5px 20px
+    rgba(0, 0, 0, 0.15);
+
+  z-index: 4000;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.toast-exito {
+  background-color: #16a34a;
+}
+
+.toast-error {
+  background-color: #dc2626;
+}
+
+
+/* =========================
+   MENSAJES VACÍOS
+========================= */
+
+.empty-message {
+  color: #777;
+}
+
+
+/* =========================
+   PAPELERA
+========================= */
+
+.trash-actions {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+}
+
+.btn-restaurar {
+  background-color: #2563eb;
+}
+
+.btn-restaurar:hover {
+  background-color: #1d4ed8;
+}
+
+.btn-eliminar-definitivo {
+  background-color: #dc2626;
+}
+
+.btn-eliminar-definitivo:hover {
+  background-color: #b91c1c;
+}
+
+
+/* =========================
+   CABECERA PAPELERA
+========================= */
+
+.trash-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  margin-bottom: 20px;
+}
+
+.trash-header h2 {
+  margin: 0 0 5px;
+}
+
+.trash-header p {
+  margin: 0;
+
+  color: #6b7280;
+
+  font-size: 13px;
+}
+
+.btn-vaciar-papelera {
+  padding: 9px 14px;
+
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+
+  background-color: #fff1f2;
+  color: #dc2626;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.btn-vaciar-papelera:hover {
+  background-color: #fee2e2;
+  border-color: #fca5a5;
+
+  transform: translateY(-1px);
+}
+
+.btn-vaciar-papelera:active {
+  transform: scale(0.97);
+}
+
+
+/* =========================
+   DASHBOARD
+========================= */
+
+.dashboard h2 {
+  margin-bottom: 20px;
+}
+
+.dashboard-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, 1fr);
+
+  gap: 20px;
+}
+
+.dashboard-card {
+  position: relative;
+
+  background-color: white;
+
+  padding: 22px 25px;
+
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 3px 10px
+    rgba(0, 0, 0, 0.05);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-4px);
+
+  box-shadow:
+    0 10px 25px
+    rgba(0, 0, 0, 0.10);
+}
+
+.dashboard-card::before {
+  content: '';
+
+  position: absolute;
+
+  top: 0;
+  left: 0;
+
+  width: 5px;
+  height: 100%;
+}
+
+
+/* PENDIENTES */
+
+.dashboard-pendientes::before {
+  background-color: #2563eb;
+}
+
+.dashboard-pendientes .dashboard-number {
+  color: #2563eb;
+}
+
+.dashboard-pendientes .dashboard-icon-box {
+  background-color: #dbeafe;
+}
+
+
+/* REALIZADAS */
+
+.dashboard-realizadas::before {
+  background-color: #16a34a;
+}
+
+.dashboard-realizadas .dashboard-number {
+  color: #16a34a;
+}
+
+.dashboard-realizadas .dashboard-icon-box {
+  background-color: #dcfce7;
+}
+
+
+/* VENCIDAS */
+
+.dashboard-vencidas::before {
+  background-color: #dc2626;
+}
+
+.dashboard-vencidas .dashboard-number {
+  color: #dc2626;
+}
+
+.dashboard-vencidas .dashboard-icon-box {
+  background-color: #fee2e2;
+}
+
+
+/* PRIORIDAD ALTA */
+
+.dashboard-alta::before {
+  background-color: #ea580c;
+}
+
+.dashboard-alta .dashboard-number {
+  color: #ea580c;
+}
+
+.dashboard-alta .dashboard-icon-box {
+  background-color: #ffedd5;
+}
+
+.dashboard-icon-box {
+  width: 42px;
+  height: 42px;
+
+  border-radius: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 12px;
+
+  font-size: 21px;
+}
+
+.dashboard-number {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.dashboard-title {
+  margin-top: 4px;
+
+  color: #6b7280;
+
+  font-size: 14px;
+}
+
+
+/* =========================
+   PROGRESO
+========================= */
+
+.progress-section {
+  margin-top: 30px;
+
+  padding: 25px;
+
+  background-color: white;
+
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+
+  margin-bottom: 10px;
+
+  font-weight: 600;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 12px;
+
+  background-color: #e5e7eb;
+
+  border-radius: 20px;
+
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+
+  background-color: #16a34a;
+
+  border-radius: 20px;
+
+  transition: width 0.4s ease;
+}
+
+
+/* =========================
+   BIENVENIDA
+========================= */
+
+.welcome-empty {
+  min-height: 430px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  background-color: white;
+
+  padding: 40px;
+
+  border-radius: 14px;
+
+  text-align: center;
+
+  box-shadow:
+    0 4px 15px
+    rgba(0, 0, 0, 0.06);
+}
+
+.welcome-icon {
+  font-size: 52px;
+  margin-bottom: 10px;
+}
+
+.welcome-empty h2 {
+  margin: 5px 0 10px;
+
+  font-size: 28px;
+}
+
+.welcome-empty p {
+  max-width: 480px;
+
+  margin-bottom: 25px;
+
+  color: #6b7280;
+
+  line-height: 1.6;
+}
+
+.welcome-button {
+  padding: 12px 20px;
+
+  border: none;
+  border-radius: 8px;
+
+  background-color: #2563eb;
+  color: white;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.welcome-button:hover {
+  background-color: #1d4ed8;
+
+  transform: translateY(-2px);
+}
+
+
+/* =========================
+   CABECERA DASHBOARD
+========================= */
+
+.dashboard-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 25px;
+
+  margin-bottom: 30px;
+
+  background-color: white;
+
+  border-radius: 12px;
+
+  box-shadow:
+    0 3px 10px
+    rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-welcome h2 {
+  margin: 0 0 5px;
+}
+
+.dashboard-welcome p {
+  margin: 0;
+
+  color: #6b7280;
+}
+
+.dashboard-actions {
+  display: flex;
+
+  gap: 10px;
+}
+
+.dashboard-actions button {
+  padding: 10px 16px;
+
+  border-radius: 8px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.dashboard-primary {
+  border: none;
+
+  background-color: #2563eb;
+  color: white;
+}
+
+.dashboard-primary:hover {
+  background-color: #1d4ed8;
+}
+
+.dashboard-secondary {
+  border: 1px solid #d1d5db;
+
+  background-color: white;
+  color: #374151;
+}
+
+.dashboard-secondary:hover {
+  background-color: #f3f4f6;
+}
+
+.dashboard-section-title {
+  margin-bottom: 20px;
+}
+
+
+/* =========================
+   PRÓXIMAS TAREAS
+========================= */
+
+.upcoming-section {
+  margin-top: 30px;
+
+  padding: 25px;
+
+  background-color: white;
+
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.upcoming-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 15px;
+}
+
+.upcoming-header h2 {
+  margin: 0;
+}
+
+.upcoming-header button {
+  border: none;
+
+  background-color: transparent;
+
+  color: #2563eb;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.upcoming-task {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  padding: 14px 0;
+
+  border-bottom: 1px solid #e5e7eb;
+
+  cursor: pointer;
+}
+
+.upcoming-task:last-child {
+  border-bottom: none;
+}
+
+.upcoming-info {
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+.upcoming-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.upcoming-details {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  flex-wrap: wrap;
+}
+
+.upcoming-open {
+  padding: 8px 14px;
+
+  border: none;
+  border-radius: 7px;
+
+  background-color: #2563eb;
+  color: white;
+
+  cursor: pointer;
+}
+
+
+/* =========================
+   TAREAS PARA HOY
+========================= */
+
+.today-section {
+  margin-top: 30px;
+
+  padding: 25px;
+
+  background-color: white;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+
+  box-shadow:
+    0 3px 10px
+    rgba(0, 0, 0, 0.05);
+}
+
+.today-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 18px;
+}
+
+.today-header h2 {
+  margin: 0 0 5px;
+}
+
+.today-header p {
+  margin: 0;
+
+  color: #6b7280;
+}
+
+.today-icon {
+  width: 46px;
+  height: 46px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+
+  background-color: #dbeafe;
+
+  font-size: 22px;
+}
+
+.today-empty {
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  padding: 18px;
+
+  background-color: #f0fdf4;
+
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+}
+
+.today-empty > span {
+  font-size: 28px;
+}
+
+.today-empty strong {
+  color: #166534;
+}
+
+.today-empty p {
+  margin: 4px 0 0;
+
+  color: #6b7280;
+
+  font-size: 13px;
+}
+
+.today-task {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  padding: 15px;
+
+  margin-top: 10px;
+
+  background-color: #f8fafc;
+
+  border: 1px solid #e5e7eb;
+  border-left: 4px solid #2563eb;
+  border-radius: 9px;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.today-task:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 6px 18px
+    rgba(0, 0, 0, 0.08);
+}
+
+.today-alta {
+  border-left-color: #dc2626;
+}
+
+.today-media {
+  border-left-color: #d97706;
+}
+
+.today-baja {
+  border-left-color: #16a34a;
+}
+
+.today-task-info {
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+.today-task-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.today-task-details {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  flex-wrap: wrap;
+}
+
+.today-badge {
+  padding: 4px 9px;
+
+  border-radius: 20px;
+
+  background-color: #fee2e2;
+  color: #b91c1c;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.today-task button {
+  padding: 8px 14px;
+
+  border: none;
+  border-radius: 7px;
+
+  background-color: #2563eb;
+  color: white;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.today-task button:hover {
+  background-color: #1d4ed8;
+
+  transform: translateY(-1px);
+}
+
+
+/* =========================
+   RESUMEN TAREAS REALIZADAS
+========================= */
+
+.completed-header {
+  display: flex;
+  align-items: center;
+
+  gap: 18px;
+
+  padding: 22px;
+
+  margin-bottom: 25px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f0fdf4,
+      #ecfdf5
+    );
+
+  border: 1px solid #bbf7d0;
+  border-radius: 14px;
+}
+
+.completed-header-icon {
+  width: 58px;
+  height: 58px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  background-color: #dcfce7;
+
+  border-radius: 14px;
+
+  font-size: 28px;
+}
+
+.completed-header-info h2 {
+  margin: 0 0 5px;
+
+  color: #166534;
+
+  font-size: 21px;
+}
+
+.completed-header-info p {
+  margin: 0 0 8px;
+
+  color: #4b5563;
+
+  font-size: 14px;
+}
+
+.completed-header-info p strong {
+  color: #15803d;
+
+  font-size: 16px;
+}
+
+.completed-today {
+  display: inline-block;
+
+  padding: 5px 10px;
+
+  background-color: #dcfce7;
+  color: #15803d;
+
+  border-radius: 20px;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.completed-list-title {
+  margin: 0 0 15px;
+
+  font-size: 18px;
+  color: #374151;
+}
+
+
+/* =========================
+   MODAL DETALLE DE TAREA
+========================= */
+
+.task-detail-modal {
+  width: 520px;
+  max-width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 26px;
+
+  background-color: #ffffff;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.18),
+    0 4px 15px rgba(0, 0, 0, 0.08);
+
+  animation: modalEntrada 0.2s ease;
+}
+
+
+/* CABECERA DETALLE */
+
+.task-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+
+  gap: 20px;
+
+  margin-bottom: 24px;
+}
+
+.task-detail-label {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #6b7280;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.5px;
+}
+
+.task-detail-header h2 {
+  margin: 0;
+
+  color: #1f2937;
+
+  font-size: 24px;
+
+  line-height: 1.25;
+}
+
+.task-detail-close {
+  width: 38px;
+  height: 38px;
+
+  flex-shrink: 0;
+
+  border: none;
+  border-radius: 9px;
+
+  background-color: #f3f4f6;
+  color: #4b5563;
+
+  font-size: 18px;
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.task-detail-close:hover {
+  background-color: #e5e7eb;
+  color: #111827;
+}
+
+.task-detail-close:active {
+  transform: scale(0.95);
+}
+
+
+/* =========================
+   INFO DETALLE
+========================= */
+
+.task-detail-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, 1fr);
+
+  gap: 14px;
+
+  margin-bottom: 25px;
+}
+
+.task-detail-item {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 12px;
+
+  min-height: 85px;
+
+  box-sizing: border-box;
+
+  padding: 15px;
+
+  background-color: #f8fafc;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.task-detail-icon {
+  width: 38px;
+  height: 38px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: #ffffff;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+
+  font-size: 18px;
+}
+
+.task-detail-item > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  gap: 5px;
+}
+
+.task-detail-title {
+  color: #6b7280;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.task-detail-item strong {
+  color: #1f2937;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.task-detail-time {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+/* =========================
+   ESTADOS DETALLE
+========================= */
+
+.task-detail-status {
+  display: inline-block;
+
+  padding: 4px 9px;
+
+  border-radius: 20px;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-a-tiempo {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.status-proxima {
+  background-color: #fef3c7;
+  color: #ac510d;
+}
+
+.status-hoy {
+  background-color: #ffedd5;
+  color: #c2410c;
+}
+
+.status-vencida {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.status-sin-fecha {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+
+/* =========================
+   ACCIONES DETALLE
+========================= */
+
+.task-detail-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  padding-top: 20px;
+
+  border-top: 1px solid #e5e7eb;
+}
+
+.task-detail-actions button {
+  padding: 10px 15px;
+
+  border-radius: 8px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
+}
+
+
+/* COMPLETAR */
+
+.task-detail-complete {
+  border: none;
+
+  background-color: #16a34a;
+  color: white;
+}
+
+.task-detail-complete:hover {
+  background-color: #15803d;
+
+  box-shadow:
+    0 4px 10px
+    rgba(22, 163, 74, 0.22);
+}
+
+.task-detail-complete:active {
+  transform: scale(0.97);
+}
+
+
+/* EDITAR */
+
+.task-detail-edit {
+  border: 1px solid #bfdbfe;
+
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+
+.task-detail-edit:hover {
+  background-color: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.task-detail-edit:active {
+  transform: scale(0.97);
+}
+
+
+/* ELIMINAR */
+
+.task-detail-delete {
+  border: 1px solid #fecaca;
+
+  background-color: #fff1f2;
+  color: #dc2626;
+}
+
+.task-detail-delete:hover {
+  background-color: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.task-detail-delete:active {
+  transform: scale(0.97);
+}
+
+
+/* =========================
+   CURSOR TARJETAS
+========================= */
+
+.task-card,
+.today-task,
+.upcoming-task {
+  cursor: pointer;
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 700px) {
+
+  .header {
+    padding: 20px;
+  }
+
+  .container {
+    margin: 25px auto;
+  }
+
+  .task-form-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .task-form-row input,
+  .task-form input {
+    width: 100%;
+
+    box-sizing: border-box;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .task-card {
+    gap: 15px;
+  }
+
+  .task-info {
+    flex: 1;
+  }
+
+  .dashboard-welcome {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dashboard-actions {
+    width: 100%;
+  }
+
+  .dashboard-actions button {
+    flex: 1;
+  }
+
+  .upcoming-task {
+    align-items: flex-start;
+  }
+
+  .upcoming-details {
+    flex-wrap: wrap;
+  }
+
+  .trash-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .trash-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .btn-vaciar-papelera {
+    width: 100%;
+  }
+
+  .task-date-info {
+    align-items: flex-start;
+  }
+
+  .today-task {
+    align-items: flex-start;
+  }
+
+  .completed-header {
+    align-items: flex-start;
+  }
+}
+
+
+@media (max-width: 600px) {
+
+  .task-detail-modal {
+    padding: 20px;
+  }
+
+  .task-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .task-detail-header h2 {
+    font-size: 21px;
+  }
+
+  .task-detail-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .task-detail-actions button {
+    width: 100%;
+  }
+}
+
+
+@media (max-width: 500px) {
+
+  .modal,
+  .modal-delete,
+  .delete-modal {
+    padding: 24px 20px;
+  }
+
+  .modal-actions,
+  .delete-actions {
+    flex-direction: column-reverse;
+  }
+
+  .btn-cancelar,
+  .btn-cancelar-eliminar,
+  .btn-eliminar,
+  .btn-confirmar-eliminar {
+    width: 100%;
+  }
+}
+/* =========================
+   CORRECCIÓN MODAL EDITAR
+========================= */
+
+.modal:not(.modal-delete) {
+  display: flex;
+  flex-direction: column;
+
+  gap: 10px;
+
+  width: 420px;
+  max-width: 100%;
+
+  padding: 28px;
+
+  background-color: #ffffff;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+
+  box-sizing: border-box;
+}
+
+.modal:not(.modal-delete) h2 {
+  margin: 0 0 12px;
+
+  color: #1f2937;
+
+  font-size: 23px;
+  font-weight: 700;
+}
+
+.modal:not(.modal-delete) label {
+  margin-top: 4px;
+
+  color: #4b5563;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.modal:not(.modal-delete) input,
+.modal:not(.modal-delete) select {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 11px 12px;
+
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+
+  background-color: #ffffff;
+  color: #1f2937;
+
+  font-size: 14px;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.modal:not(.modal-delete) input:focus,
+.modal:not(.modal-delete) select:focus {
+  border-color: #2563eb;
+
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.modal:not(.modal-delete) .modal-actions {
+  display: flex;
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  margin-top: 16px;
+}
+
+.modal:not(.modal-delete) .btn-cancelar {
+  padding: 10px 16px;
+
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+
+  background-color: #ffffff;
+  color: #374151;
+
+  font-weight: 600;
+}
+
+.modal:not(.modal-delete) .btn-cancelar:hover {
+  background-color: #f3f4f6;
+}
+
+.modal:not(.modal-delete) .btn-guardar {
+  padding: 10px 16px;
+
+  border: none;
+  border-radius: 8px;
+
+  background-color: #2563eb;
+  color: #ffffff;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.modal:not(.modal-delete) .btn-guardar:hover {
+  background-color: #1d4ed8;
+}
+
+.modal:not(.modal-delete) .btn-guardar:active {
+  transform: scale(0.97);
+}
+
+@media (max-width: 500px) {
+  .modal:not(.modal-delete) {
+    padding: 22px;
+  }
+
+  .modal:not(.modal-delete) .modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .modal:not(.modal-delete) .btn-cancelar,
+  .modal:not(.modal-delete) .btn-guardar {
+    width: 100%;
+  }
+}
+/* =========================
+   DESCRIPCIÓN - NUEVA TAREA
+========================= */
+
+.task-form-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.task-form-main > input[type="text"] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.task-description-input {
+  width: 100%;
+  min-height: 90px;
+
+  box-sizing: border-box;
+
+  padding: 12px 14px;
+
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+
+  background-color: #ffffff;
+  color: #1f2937;
+
+  font-size: 14px;
+  font-family: inherit;
+
+  line-height: 1.5;
+
+  resize: vertical;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.task-description-input::placeholder {
+  color: #9ca3af;
+}
+
+.task-description-input:focus {
+  border-color: #2563eb;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(37, 99, 235, 0.12);
+
+  background-color: #ffffff;
+}
+
+.task-description-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-top: -5px;
+
+  color: #9ca3af;
+
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.task-form-options {
+  margin-top: 3px;
+}
+
+
+/* =========================
+   DESCRIPCIÓN - DETALLE TAREA
+========================= */
+
+.task-detail-description {
+  margin-bottom: 18px;
+
+  padding: 16px;
+
+  background-color: #f8fafc;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.task-detail-description-header {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  margin-bottom: 8px;
+
+  color: #374151;
+
+  font-size: 13px;
+}
+
+.task-detail-description-header span {
+  font-size: 17px;
+}
+
+.task-detail-description-header strong {
+  font-weight: 700;
+}
+
+.task-detail-description p {
+  margin: 0;
+
+  color: #4b5563;
+
+  font-size: 14px;
+  line-height: 1.6;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.task-detail-description p.task-description-empty {
+  color: #9ca3af;
+
+  font-style: italic;
+}
+
+
+/* =========================
+   DESCRIPCIÓN - EDITAR TAREA
+========================= */
+
+.edit-description-input {
+  width: 100%;
+  min-height: 90px;
+
+  box-sizing: border-box;
+
+  padding: 11px 12px;
+
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+
+  background-color: #ffffff;
+  color: #1f2937;
+
+  font-size: 14px;
+  font-family: inherit;
+
+  line-height: 1.5;
+
+  resize: vertical;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.edit-description-input::placeholder {
+  color: #9ca3af;
+}
+
+.edit-description-input:focus {
+  border-color: #2563eb;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(37, 99, 235, 0.12);
+}
+
+.optional-label {
+  color: #9ca3af;
+
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.edit-description-count {
+  margin-top: -5px;
+
+  color: #9ca3af;
+
+  font-size: 11px;
+
+  text-align: right;
+}
+
+
+/* =========================
+   AJUSTES MODAL CON DESCRIPCIÓN
+========================= */
+
+.task-detail-modal {
+  max-height: 90vh;
+
+  overflow-y: auto;
+}
+
+.modal:not(.modal-delete) {
+  max-height: 90vh;
+
+  overflow-y: auto;
+}
+
+
+/* =========================
+   RESPONSIVE DESCRIPCIÓN
+========================= */
+
+@media (max-width: 700px) {
+
+  .task-form-options {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .task-form-options select,
+  .task-form-options input,
+  .task-form-options button {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .task-detail-description {
+    padding: 14px;
+  }
+
+  .task-description-input,
+  .edit-description-input {
+    min-height: 80px;
+  }
+}
+/* =========================
+   HISTORIAL
+   TAREAS REALIZADAS CLICKEABLES
+========================= */
+
+.task-completed-clickable {
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+
+/* AL PASAR EL CURSOR */
+
+.task-completed-clickable:hover {
+  transform: translateY(-2px);
+
+  background-color: #f8fffa;
+
+  border-color: #bbf7d0;
+
+  box-shadow:
+    0 7px 18px
+    rgba(22, 163, 74, 0.10);
+}
+
+
+/* AL HACER CLICK */
+
+.task-completed-clickable:active {
+  transform: translateY(0);
+}
+
+
+/* =========================
+   ETIQUETA COMPLETADO
+   NO CLICKEABLE
+========================= */
+
+.completed-label-static {
+  cursor: default;
+
+  user-select: none;
+
+  pointer-events: auto;
+}
+
+
+/* Evita que parezca botón */
+
+.completed-label-static:hover {
+  background-color: #16a34a;
+
+  transform: none;
+
+  box-shadow: none;
+}
+
+
+/* =========================
+   MODAL TAREA REALIZADA
+========================= */
+
+.completed-detail-item {
+  background-color: #f0fdf4;
+
+  border-color: #bbf7d0;
+}
+
+
+/* ÍCONO DEL CUADRO COMPLETADA */
+
+.completed-detail-item .task-detail-icon {
+  background-color: #dcfce7;
+
+  border-color: #bbf7d0;
+}
+
+
+/* TEXTO:
+   Completada hoy
+   Completada ayer
+   Completada hace X días
+*/
+
+.completed-detail-relative {
+  display: inline-block;
+
+  margin-top: 2px;
+
+  color: #15803d;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+/* =========================
+   AJUSTES HISTORIAL
+========================= */
+
+.task-completed-clickable .task-info {
+  flex: 1;
+}
+
+
+/* Mantiene la etiqueta Completado
+   alineada a la derecha */
+
+.task-completed-clickable .completed-label {
+  flex-shrink: 0;
+
+  margin-left: 15px;
+}
+
+
+/* =========================
+   EFECTO VISUAL DE COMPLETADA
+========================= */
+
+.task-completed-clickable .task-name {
+  text-decoration: line-through;
+
+  color: #6b7280;
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 700px) {
+
+  .task-completed-clickable {
+    align-items: flex-start;
+  }
+
+  .task-completed-clickable .completed-label {
+    margin-left: 8px;
+  }
+
+}
+
+
+@media (max-width: 500px) {
+
+  .task-completed-clickable {
+    flex-direction: column;
+
+    align-items: stretch;
+  }
+
+  .task-completed-clickable .completed-label {
+    align-self: flex-start;
+
+    margin-left: 0;
+    margin-top: 8px;
+  }
+
+}
+/* ========================================
+   FONDO GENERAL TASKFLOW - IMAGEN
+======================================== */
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app {
+  min-height: 100vh;
+
+  background-image:
+    linear-gradient(
+      rgba(255, 255, 255, 0.18),
+      rgba(255, 255, 255, 0.18)
+    ),
+    url('./assets/FONDO.jpg');
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+
+  color: #494747;
+}
+
+.container {
+  background: transparent;
+}
+
+
+/* ========================================
+   EFECTO SUAVE EN LAS SECCIONES
+======================================== */
+
+.dashboard,
+.task-list,
+.task-form {
+  position: relative;
+}
+
+
+/* ========================================
+   TARJETAS MÁS INTEGRADAS CON EL FONDO
+======================================== */
+
+.dashboard-card,
+.task-card,
+.progress-section,
+.today-section,
+.upcoming-section,
+.task-form,
+.task-list {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+/* =========================
+   LIMPIEZA FONDO ANTIGUO
+========================= */
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  background: none !important;
+}
+
+#root {
+  min-height: 100vh;
+  background: transparent !important;
+}
+
+.container {
+  background: transparent;
+}
+.sidebar-divider {
+  height: 1px;
+
+  margin: 15px 0;
+
+  background-color: #e5e7eb;
+}
+
+.sidebar-logout {
+  color: #dc2626;
+}
+
+.sidebar-logout:hover {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
