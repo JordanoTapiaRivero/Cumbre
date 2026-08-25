@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import fondo from './assets/fondo.jpg'
 import Login from './components/Login'
@@ -7,6 +7,7 @@ import { supabase } from './lib/supabaseClient'
 function App() {
   const [usuario, setUsuario] = useState(null)
   const [cargandoSesion, setCargandoSesion] = useState(true)
+  const formularioRef = useRef(null)
 
   const [tarea, setTarea] = useState('')
   const [descripcion, setDescripcion] = useState('')
@@ -66,13 +67,17 @@ useEffect(() => {
     setTareasEliminadas([])
     return
   }
-console.log('UID USUARIO ACTUAL:', usuario.id)
+  console.log('UID USUARIO ACTUAL:', usuario.id)
 
   const cargarTareas = async () => {
     const { data, error } = await supabase
       .from('Tareas')
       .select('*')
       .order('created_at', { ascending: false })
+
+      console.log('TAREAS RECIBIDAS:', data)
+      console.log('ERROR SUPABASE:', error)
+      console.log('UID CONSULTANDO:', usuario.id)
 
     if (error) {
       console.error(
@@ -115,6 +120,17 @@ console.log('UID USUARIO ACTUAL:', usuario.id)
 
   cargarTareas()
 }, [usuario])
+
+  const irACrearTarea = () => {
+    setSeccion('pendientes')
+
+    setTimeout(() => {
+      formularioRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      })
+    }, 100)
+  }
 
   const [
     tareaRealizadaSeleccionada,
@@ -1066,58 +1082,76 @@ const vaciarPapelera = async () => {
           HEADER
       ========================= */}
 
-      <header className="header">
+     <header className="header">
 
-        <h1>
-          Flujo de tareas
-        </h1>
+  <div className="header-left">
 
-        <p>
-          Gestiona tus tareas de forma simple.
-        </p>
+    <button
+      className="menu-button"
+      onClick={() =>
+        setMenuAbierto(
+          !menuAbierto
+        )
+      }
+      aria-label="Abrir menú"
+    >
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      >
+        <line
+          x1="4"
+          y1="6"
+          x2="20"
+          y2="6"
+        />
 
-        <button
-          className="menu-button"
-          onClick={() =>
-            setMenuAbierto(
-              !menuAbierto
-            )
-          }
-          aria-label="Abrir menú"
-        >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          >
-            <line
-              x1="4"
-              y1="6"
-              x2="20"
-              y2="6"
-            />
+        <line
+          x1="4"
+          y1="12"
+          x2="20"
+          y2="12"
+        />
 
-            <line
-              x1="4"
-              y1="12"
-              x2="20"
-              y2="12"
-            />
+        <line
+          x1="4"
+          y1="18"
+          x2="20"
+          y2="18"
+        />
+      </svg>
+    </button>
 
-            <line
-              x1="4"
-              y1="18"
-              x2="20"
-              y2="18"
-            />
-          </svg>
-        </button>
+    <div className="header-text">
 
-      </header>
+      <h1>
+        Cumbre
+      </h1>
+
+      <p>
+        Gestiona tus tareas de forma simple.
+      </p>
+
+    </div>
+
+  </div>
+
+  <div className="header-user">
+    <span>
+      Bienvenido, {usuario?.email?.split('@')[0]}
+    </span>
+
+    <span className="header-user-icon">
+      👤
+    </span>
+  </div>
+
+</header>
 
       {/* =========================
           MENÚ
@@ -1242,7 +1276,7 @@ const vaciarPapelera = async () => {
                 </div>
 
                 <h2>
-                  Bienvenido a TaskFlow
+                  Bienvenido a Cumbre
                 </h2>
 
                 <p>
@@ -1253,9 +1287,7 @@ const vaciarPapelera = async () => {
 
                 <button
                   className="welcome-button"
-                  onClick={() =>
-                    setSeccion('pendientes')
-                  }
+                  onClick={irACrearTarea}
                 >
                   + Crear primera tarea
                 </button>
@@ -1637,7 +1669,10 @@ const vaciarPapelera = async () => {
         {seccion === 'pendientes' && (
           <>
 
-            <section className="task-form">
+            <section
+              className="task-form"
+              ref={formularioRef}
+            >
 
               <h2>
                 Nueva tarea
