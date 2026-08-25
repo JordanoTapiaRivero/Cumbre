@@ -66,6 +66,7 @@ useEffect(() => {
     setTareasEliminadas([])
     return
   }
+console.log('UID USUARIO ACTUAL:', usuario.id)
 
   const cargarTareas = async () => {
     const { data, error } = await supabase
