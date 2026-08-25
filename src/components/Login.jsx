@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './Login.css'
 import { supabase } from '../lib/supabaseClient'
 import fondo from '../assets/fondo.jpg'
@@ -11,6 +11,23 @@ function Login({ onLogin }) {
   const [password, setPassword] = useState('')
   const [confirmarPassword, setConfirmarPassword] = useState('')
   const [error, setError] = useState('')
+
+  useEffect(() => {
+  const manejarAtras = () => {
+    setModoRegistro(false)
+    setError('')
+    setNombre('')
+    setEmail('')
+    setPassword('')
+    setConfirmarPassword('')
+  }
+
+  window.addEventListener('popstate', manejarAtras)
+
+  return () => {
+    window.removeEventListener('popstate', manejarAtras)
+  }
+}, [])
 
   const manejarLogin = async (e) => {
   e.preventDefault()
@@ -86,14 +103,25 @@ function Login({ onLogin }) {
     }
   }
 
-  const cambiarModo = () => {
-    setModoRegistro(!modoRegistro)
-    setError('')
-    setNombre('')
-    setEmail('')
-    setPassword('')
-    setConfirmarPassword('')
+ const cambiarModo = () => {
+  if (!modoRegistro) {
+    window.history.pushState(
+      { registro: true },
+      '',
+      '#registro'
+    )
+    
+    setModoRegistro(true)
+  } else {
+    window.history.back()
   }
+
+  setError('')
+  setNombre('')
+  setEmail('')
+  setPassword('')
+  setConfirmarPassword('')
+}
 
   return (
   <div
