@@ -11,20 +11,9 @@ function App() {
   const [tarea, setTarea] = useState('')
   const [descripcion, setDescripcion] = useState('')
 
-  const [tareas, setTareas] = useState(() => {
-    const guardadas = localStorage.getItem('tareas')
-    return guardadas ? JSON.parse(guardadas) : []
-  })
-
-  const [tareasRealizadas, setTareasRealizadas] = useState(() => {
-    const guardadas = localStorage.getItem('tareasRealizadas')
-    return guardadas ? JSON.parse(guardadas) : []
-  })
-
-  const [tareasEliminadas, setTareasEliminadas] = useState(() => {
-    const guardadas = localStorage.getItem('tareasEliminadas')
-    return guardadas ? JSON.parse(guardadas) : []
-  })
+  const [tareas, setTareas] = useState([])
+  const [tareasRealizadas, setTareasRealizadas] = useState([])
+  const [tareasEliminadas, setTareasEliminadas] = useState([])
 
   const [menuAbierto, setMenuAbierto] = useState(false)
   const [seccion, setSeccion] = useState('inicio')
@@ -70,6 +59,61 @@ function App() {
     subscription.unsubscribe()
   }
 }, [])
+useEffect(() => {
+  if (!usuario) {
+    setTareas([])
+    setTareasRealizadas([])
+    setTareasEliminadas([])
+    return
+  }
+
+  const cargarTareas = async () => {
+    const { data, error } = await supabase
+      .from('Tareas')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error(
+        'Error al cargar tareas:',
+        error.message
+      )
+      return
+    }
+
+    const tareasFormateadas = data.map((item) => ({
+      id: item.id,
+      nombre: item.nombre,
+      descripcion: item.descripcion || '',
+      prioridad: item.prioridad,
+      fechaLimite: item.fecha_limite,
+      completada: item.estado === 'realizada',
+      fechaCreacion: item.created_at,
+      fechaCompletada: item.fecha_completada,
+      fechaEliminada: item.fecha_eliminada
+    }))
+
+    setTareas(
+      tareasFormateadas.filter(
+        (_, index) => data[index].estado === 'pendiente'
+      )
+    )
+
+    setTareasRealizadas(
+      tareasFormateadas.filter(
+        (_, index) => data[index].estado === 'realizada'
+      )
+    )
+
+    setTareasEliminadas(
+      tareasFormateadas.filter(
+        (_, index) => data[index].estado === 'eliminada'
+      )
+    )
+  }
+
+  cargarTareas()
+}, [usuario])
 
   const [
     tareaRealizadaSeleccionada,
@@ -121,102 +165,165 @@ function App() {
   /* =========================
      AGREGAR TAREA
   ========================= */
-
-  const agregarTarea = () => {
-    if (
-      tarea.trim() === '' ||
-      prioridad === '' ||
-      fechaLimite === ''
-    ) {
-      mostrarMensaje(
-        '⚠ Debes completar el nombre, la prioridad y la fecha.',
-        'error'
-      )
-
-      return
-    }
-
-    const hoy = obtenerFechaHoy()
-
-    if (fechaLimite < hoy) {
-      mostrarMensaje(
-        '⚠ Coloque una fecha correcta. No puede seleccionar una fecha anterior a hoy.',
-        'error'
-      )
-
-      return
-    }
-
-    const nuevaTarea = {
-      id: crypto.randomUUID(),
-      nombre: tarea.trim(),
-      descripcion: descripcion.trim(),
-      completada: false,
-      prioridad,
-      fechaLimite,
-      fechaCreacion: new Date().toISOString()
-    }
-
-    setTareas((anteriores) => [
-      ...anteriores,
-      nuevaTarea
-    ])
-
+const agregarTarea = async () => {
+  if (
+    tarea.trim() === '' ||
+    prioridad === '' ||
+    fechaLimite === ''
+  ) {
     mostrarMensaje(
-      `✓ ${tarea.trim()} ha sido agregada`
+      '⚠ Debes completar el nombre, la prioridad y la fecha.',
+      'error'
     )
 
-    setTarea('')
-    setDescripcion('')
-    setPrioridad('')
-    setFechaLimite('')
+    return
   }
 
+  const hoy = obtenerFechaHoy()
+
+  if (fechaLimite < hoy) {
+    mostrarMensaje(
+      '⚠ Coloque una fecha correcta. No puede seleccionar una fecha anterior a hoy.',
+      'error'
+    )
+
+    return
+  }
+
+  if (!usuario) {
+    mostrarMensaje(
+      '⚠ No hay un usuario conectado.',
+      'error'
+    )
+    return
+  }
+
+  const { data, error } = await supabase
+    .from('Tareas')
+    .insert([
+      {
+        user_id: usuario.id,
+        nombre: tarea.trim(),
+        descripcion: descripcion.trim(),
+        prioridad,
+        fecha_limite: fechaLimite,
+        estado: 'pendiente'
+      }
+    ])
+    .select()
+    .single()
+
+  if (error) {
+    console.error(
+      'Error al crear tarea:',
+      error.message
+    )
+
+    mostrarMensaje(
+      '⚠ No se pudo crear la tarea.',
+      'error'
+    )
+
+    return
+  }
+
+  const nuevaTarea = {
+    id: data.id,
+    nombre: data.nombre,
+    descripcion: data.descripcion || '',
+    completada: false,
+    prioridad: data.prioridad,
+    fechaLimite: data.fecha_limite,
+    fechaCreacion: data.created_at,
+    fechaCompletada: data.fecha_completada,
+    fechaEliminada: data.fecha_eliminada
+  }
+
+  setTareas((anteriores) => [
+    ...anteriores,
+    nuevaTarea
+  ])
+
+  mostrarMensaje(
+    `✓ ${tarea.trim()} ha sido agregada`
+  )
+
+  setTarea('')
+  setDescripcion('')
+  setPrioridad('')
+  setFechaLimite('')
+}
+ 
   /* =========================
      COMPLETAR TAREA
   ========================= */
 
-  const completarTarea = (id) => {
-    const tareaCompletada = tareas.find(
-      (item) => item.id === id
-    )
+  const completarTarea = async (id) => {
+  const tareaCompletada = tareas.find(
+    (item) => item.id === id
+  )
 
-    if (!tareaCompletada) {
-      return
-    }
+  if (!tareaCompletada) {
+    return
+  }
 
-    setTareas((anteriores) =>
-      anteriores.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              completada: true
-            }
-          : item
-      )
+  const fechaCompletada =
+    new Date().toISOString()
+
+  const { error } = await supabase
+    .from('Tareas')
+    .update({
+      estado: 'realizada',
+      fecha_completada: fechaCompletada
+    })
+    .eq('id', id)
+
+  if (error) {
+    console.error(
+      'Error al completar tarea:',
+      error.message
     )
 
     mostrarMensaje(
-      `✓ ${tareaCompletada.nombre} ha sido completada`
+      '⚠ No se pudo completar la tarea.',
+      'error'
     )
 
-    setTimeout(() => {
-      setTareasRealizadas((anteriores) => [
-        ...anteriores,
-        {
-          ...tareaCompletada,
-          completada: true,
-          fechaCompletada: new Date().toISOString()
-        }
-      ])
-
-      setTareas((anteriores) =>
-        anteriores.filter(
-          (item) => item.id !== id
-        )
-      )
-    }, 3000)
+    return
   }
+
+  setTareas((anteriores) =>
+    anteriores.map((item) =>
+      item.id === id
+        ? {
+            ...item,
+            completada: true
+          }
+        : item
+    )
+  )
+
+  mostrarMensaje(
+    `✓ ${tareaCompletada.nombre} ha sido completada`
+  )
+
+  setTimeout(() => {
+    setTareasRealizadas((anteriores) => [
+      ...anteriores,
+      {
+        ...tareaCompletada,
+        completada: true,
+        fechaCompletada
+      }
+    ])
+
+    setTareas((anteriores) =>
+      anteriores.filter(
+        (item) => item.id !== id
+      )
+    )
+  }, 3000)
+}
 
   /* =========================
      ORDENAR TAREAS
@@ -511,60 +618,77 @@ function App() {
     setMenuTareaAbierto(null)
   }
 
-  const guardarEdicion = () => {
-    if (!tareaEditando) {
-      return
-    }
+  const guardarEdicion = async () => {
+  if (!tareaEditando) {
+    return
+  }
 
-    if (
-      nombreEditado.trim() === '' ||
-      prioridadEditada === '' ||
-      fechaEditada === ''
-    ) {
-      mostrarMensaje(
-        '⚠ Debes completar todos los campos obligatorios.',
-        'error'
-      )
-
-      return
-    }
-
-    if (
-      fechaEditada <
-      obtenerFechaHoy()
-    ) {
-      mostrarMensaje(
-        '⚠ Coloque una fecha correcta.',
-        'error'
-      )
-
-      return
-    }
-
-    setTareas((anteriores) =>
-      anteriores.map((item) =>
-        item.id === tareaEditando.id
-          ? {
-              ...item,
-              nombre:
-                nombreEditado.trim(),
-              descripcion:
-                descripcionEditada.trim(),
-              prioridad:
-                prioridadEditada,
-              fechaLimite:
-                fechaEditada
-            }
-          : item
-      )
+  if (
+    nombreEditado.trim() === '' ||
+    prioridadEditada === '' ||
+    fechaEditada === ''
+  ) {
+    mostrarMensaje(
+      '⚠ Debes completar todos los campos obligatorios.',
+      'error'
     )
 
-    setTareaEditando(null)
+    return
+  }
+
+  if (fechaEditada < obtenerFechaHoy()) {
+    mostrarMensaje(
+      '⚠ Coloque una fecha correcta.',
+      'error'
+    )
+
+    return
+  }
+
+  const { error } = await supabase
+    .from('Tareas')
+    .update({
+      nombre: nombreEditado.trim(),
+      descripcion: descripcionEditada.trim(),
+      prioridad: prioridadEditada,
+      fecha_limite: fechaEditada
+    })
+    .eq('id', tareaEditando.id)
+
+  if (error) {
+    console.error(
+      'Error al editar tarea:',
+      error.message
+    )
 
     mostrarMensaje(
-      '✓ Tarea actualizada correctamente'
+      '⚠ No se pudo actualizar la tarea.',
+      'error'
     )
+
+    return
   }
+
+  setTareas((anteriores) =>
+    anteriores.map((item) =>
+      item.id === tareaEditando.id
+        ? {
+            ...item,
+            nombre: nombreEditado.trim(),
+            descripcion: descripcionEditada.trim(),
+            prioridad: prioridadEditada,
+            fechaLimite: fechaEditada
+          }
+        : item
+    )
+  )
+
+  setTareaEditando(null)
+
+  mostrarMensaje(
+    '✓ Tarea actualizada correctamente'
+  )
+}
 
   /* =========================
      ELIMINAR
@@ -575,70 +699,112 @@ function App() {
     setMenuTareaAbierto(null)
   }
 
-  const confirmarEliminar = () => {
-    if (!tareaEliminar) {
-      return
-    }
-
-    setTareas((anteriores) =>
-      anteriores.filter(
-        (item) =>
-          item.id !== tareaEliminar.id
-      )
-    )
-
-    setTareasEliminadas((anteriores) => [
-      ...anteriores,
-      {
-        ...tareaEliminar,
-        completada: false,
-        fechaEliminada:
-          new Date().toISOString()
-      }
-    ])
-
-    mostrarMensaje(
-      `✓ ${tareaEliminar.nombre} fue movida a la papelera`
-    )
-
-    setTareaEliminar(null)
+ const confirmarEliminar = async () => {
+  if (!tareaEliminar) {
+    return
   }
 
-  /* =========================
-     RESTAURAR
-  ========================= */
+  const fechaEliminada =
+    new Date().toISOString()
 
-  const restaurarTarea = (id) => {
-    const tareaRestaurada =
-      tareasEliminadas.find(
-        (item) => item.id === id
-      )
+  const { error } = await supabase
+    .from('Tareas')
+    .update({
+      estado: 'eliminada',
+      fecha_eliminada: fechaEliminada
+    })
+    .eq('id', tareaEliminar.id)
 
-    if (!tareaRestaurada) {
-      return
-    }
-
-    const {
-      fechaEliminada,
-      ...tareaSinFechaEliminada
-    } = tareaRestaurada
-
-    setTareas((anteriores) => [
-      ...anteriores,
-      tareaSinFechaEliminada
-    ])
-
-    setTareasEliminadas((anteriores) =>
-      anteriores.filter(
-        (item) => item.id !== id
-      )
+  if (error) {
+    console.error(
+      'Error al mover tarea a papelera:',
+      error.message
     )
 
     mostrarMensaje(
-      `✓ ${tareaRestaurada.nombre} fue restaurada`
+      '⚠ No se pudo mover la tarea a la papelera.',
+      'error'
     )
+
+    return
   }
 
+  setTareas((anteriores) =>
+    anteriores.filter(
+      (item) =>
+        item.id !== tareaEliminar.id
+    )
+  )
+
+  setTareasEliminadas((anteriores) => [
+    ...anteriores,
+    {
+      ...tareaEliminar,
+      completada: false,
+      fechaEliminada
+    }
+  ])
+
+  mostrarMensaje(
+    `✓ ${tareaEliminar.nombre} fue movida a la papelera`
+  )
+
+  setTareaEliminar(null)
+}
+/* =========================
+   RESTAURAR TAREA
+========================= */
+
+const restaurarTarea = async (id) => {
+  const tareaRestaurada = tareasEliminadas.find(
+    (item) => item.id === id
+  )
+
+  if (!tareaRestaurada) {
+    return
+  }
+
+  const { error } = await supabase
+    .from('Tareas')
+    .update({
+      estado: 'pendiente',
+      fecha_eliminada: null
+    })
+    .eq('id', id)
+
+  if (error) {
+    console.error(
+      'Error al restaurar tarea:',
+      error.message
+    )
+
+    mostrarMensaje(
+      '⚠ No se pudo restaurar la tarea.',
+      'error'
+    )
+
+    return
+  }
+
+  setTareasEliminadas((anteriores) =>
+    anteriores.filter(
+      (item) => item.id !== id
+    )
+  )
+
+  setTareas((anteriores) => [
+    ...anteriores,
+    {
+      ...tareaRestaurada,
+      completada: false,
+      fechaEliminada: null
+    }
+  ])
+
+  mostrarMensaje(
+    `✓ ${tareaRestaurada.nombre} fue restaurada`
+  )
+}
   /* =========================
      ELIMINAR DEFINITIVAMENTE
   ========================= */
@@ -647,75 +813,84 @@ function App() {
     setTareaEliminarDefinitivamente(item)
   }
 
-  const confirmarEliminarDefinitivamente =
-    () => {
-      if (
-        !tareaEliminarDefinitivamente
-      ) {
-        return
-      }
+  const confirmarEliminarDefinitivamente = async () => {
+  if (!tareaEliminarDefinitivamente) {
+    return
+  }
 
-      setTareasEliminadas(
-        (anteriores) =>
-          anteriores.filter(
-            (item) =>
-              item.id !==
-              tareaEliminarDefinitivamente.id
-          )
-      )
+  const { error } = await supabase
+    .from('Tareas')
+    .delete()
+    .eq('id', tareaEliminarDefinitivamente.id)
 
-      mostrarMensaje(
-        `✓ ${tareaEliminarDefinitivamente.nombre} fue eliminada definitivamente`
-      )
-
-      setTareaEliminarDefinitivamente(
-        null
-      )
-    }
-
-  /* =========================
-     VACIAR PAPELERA
-  ========================= */
-
-  const vaciarPapelera = () => {
-    setTareasEliminadas([])
-
-    setConfirmarVaciarPapelera(
-      false
+  if (error) {
+    console.error(
+      'Error al eliminar definitivamente:',
+      error.message
     )
 
     mostrarMensaje(
-      '✓ La papelera fue vaciada correctamente'
+      '⚠ No se pudo eliminar la tarea definitivamente.',
+      'error'
     )
+
+    return
   }
 
-  /* =========================
-     CERRAR MENÚ
-  ========================= */
+  setTareasEliminadas((anteriores) =>
+    anteriores.filter(
+      (item) =>
+        item.id !==
+        tareaEliminarDefinitivamente.id
+    )
+  )
 
-  useEffect(() => {
-    const cerrarMenuTarea = (e) => {
-      if (
-        !e.target.closest(
-          '.task-menu-container'
-        )
-      ) {
-        setMenuTareaAbierto(null)
-      }
-    }
+  mostrarMensaje(
+    `✓ ${tareaEliminarDefinitivamente.nombre} fue eliminada definitivamente`
+  )
 
-    document.addEventListener(
-      'mousedown',
-      cerrarMenuTarea
+  setTareaEliminarDefinitivamente(null)
+}
+/* =========================
+   VACIAR PAPELERA
+========================= */
+
+const vaciarPapelera = async () => {
+  if (tareasEliminadas.length === 0) {
+    setConfirmarVaciarPapelera(false)
+    return
+  }
+
+  const idsEliminados = tareasEliminadas.map(
+    (item) => item.id
+  )
+
+  const { error } = await supabase
+    .from('Tareas')
+    .delete()
+    .in('id', idsEliminados)
+
+  if (error) {
+    console.error(
+      'Error al vaciar papelera:',
+      error.message
     )
 
-    return () => {
-      document.removeEventListener(
-        'mousedown',
-        cerrarMenuTarea
-      )
-    }
-  }, [])
+    mostrarMensaje(
+      '⚠ No se pudo vaciar la papelera.',
+      'error'
+    )
+
+    return
+  }
+
+  setTareasEliminadas([])
+  setConfirmarVaciarPapelera(false)
+
+  mostrarMensaje(
+    '✓ La papelera fue vaciada correctamente'
+  )
+}
 
   /* =========================
      CAMBIO DE DÍA
@@ -765,30 +940,7 @@ function App() {
      LOCAL STORAGE
   ========================= */
 
-  useEffect(() => {
-    localStorage.setItem(
-      'tareas',
-      JSON.stringify(tareas)
-    )
-  }, [tareas])
-
-  useEffect(() => {
-    localStorage.setItem(
-      'tareasRealizadas',
-      JSON.stringify(
-        tareasRealizadas
-      )
-    )
-  }, [tareasRealizadas])
-
-  useEffect(() => {
-    localStorage.setItem(
-      'tareasEliminadas',
-      JSON.stringify(
-        tareasEliminadas
-      )
-    )
-  }, [tareasEliminadas])
+ 
 
   /* =========================
      DATOS DASHBOARD
@@ -2027,31 +2179,57 @@ function App() {
 
                     </div>
 
-                    <div className="trash-actions">
+                    <div className="task-menu-container">
 
-                      <button
-                        className="btn-restaurar"
-                        onClick={() =>
-                          restaurarTarea(
-                            item.id
-                          )
-                        }
-                      >
-                        Restaurar
-                      </button>
+  <button
+    className="task-menu-button"
+    onClick={(e) => {
+      e.stopPropagation()
 
-                      <button
-                        className="btn-eliminar-definitivo"
-                        onClick={() =>
-                          eliminarDefinitivamente(
-                            item
-                          )
-                        }
-                      >
-                        Eliminar definitivamente
-                      </button>
+      setMenuTareaAbierto(
+        menuTareaAbierto === item.id
+          ? null
+          : item.id
+      )
+    }}
+  >
+    ⋮
+  </button>
 
-                    </div>
+  <div
+    className={`task-dropdown ${
+      menuTareaAbierto === item.id
+        ? 'open'
+        : ''
+    }`}
+    onClick={(e) =>
+      e.stopPropagation()
+    }
+  >
+
+    <button
+      className="restore-option"
+      onClick={() => {
+        restaurarTarea(item.id)
+        setMenuTareaAbierto(null)
+      }}
+    >
+      ♻️ Restaurar
+    </button>
+
+    <button
+      className="delete-option"
+      onClick={() => {
+        eliminarDefinitivamente(item)
+        setMenuTareaAbierto(null)
+      }}
+    >
+      🗑️ Eliminar definitivamente
+    </button>
+
+  </div>
+
+</div>
 
                   </div>
 
