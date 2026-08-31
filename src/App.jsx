@@ -275,7 +275,11 @@ const agregarTarea = async () => {
      COMPLETAR TAREA
   ========================= */
 
-  const completarTarea = async (id) => {
+ /* =========================
+   COMPLETAR TAREA
+========================= */
+
+const completarTarea = async (id) => {
   const tareaCompletada = tareas.find(
     (item) => item.id === id
   )
@@ -286,6 +290,10 @@ const agregarTarea = async () => {
 
   const fechaCompletada =
     new Date().toISOString()
+
+  /* =========================
+     ACTUALIZAR EN SUPABASE
+  ========================= */
 
   const { error } = await supabase
     .from('Tareas')
@@ -308,6 +316,52 @@ const agregarTarea = async () => {
 
     return
   }
+
+  /* =========================
+     ENVIAR CORREO
+  ========================= */
+
+  if (usuario?.email) {
+  try {
+
+    console.log(
+      'CORREO AL QUE CUMBRE INTENTA ENVIAR:',
+      usuario.email
+    )
+
+    const { error: errorCorreo } =
+      await supabase.functions.invoke(
+        'enviar-correo-tarea',
+        {
+          body: {
+            email: usuario.email,
+            nombreTarea:
+              tareaCompletada.nombre
+          }
+        }
+      )
+
+    if (errorCorreo) {
+      console.error(
+        'Error al enviar correo:',
+        errorCorreo
+      )
+    } else {
+      console.log(
+        'Correo enviado correctamente'
+      )
+    }
+
+  } catch (errorCorreo) {
+    console.error(
+      'Error inesperado al enviar correo:',
+      errorCorreo
+    )
+  }
+}
+  /* =========================
+     ACTUALIZAR INTERFAZ
+  ========================= */
 
   setTareas((anteriores) =>
     anteriores.map((item) =>
@@ -1127,23 +1181,44 @@ const vaciarPapelera = async () => {
       </svg>
     </button>
 
-    <div className="header-text">
+    <div className="header-brand">
 
-      <h1>
-        Cumbre
-      </h1>
+  <div className="cumbre-logo">
+    <svg
+      viewBox="0 0 64 48"
+      aria-hidden="true"
+    >
+      <path
+        className="mountain-back"
+        d="M2 43 L22 15 L34 31 L42 21 L62 43 Z"
+      />
 
-      <p>
-        Gestiona tus tareas de forma simple.
-      </p>
+      <path
+        className="mountain-front"
+        d="M14 43 L38 7 L62 43 Z"
+      />
 
-    </div>
+      <path
+        className="mountain-snow"
+        d="M38 7 L29 21 L36 18 L40 24 L45 18 Z"
+      />
+    </svg>
+  </div>
+
+  <div className="header-text">
+    <h1>Cumbre</h1>
+    <p>
+      Gestiona tus tareas de forma simple.
+    </p>
+  </div>
+
+</div>
 
   </div>
 
   <div className="header-user">
     <span>
-      Bienvenido, {usuario?.email?.split('@')[0]}
+      Bienvenido, {usuario?.user_metadata?.nombre || 'Usuario'}
     </span>
 
     <span className="header-user-icon">
@@ -1300,42 +1375,57 @@ const vaciarPapelera = async () => {
 
                 <div className="dashboard-welcome">
 
-                  <div>
+  <div className="welcome-main">
 
-                    <h2>
-                      ¡Hola! 👋
-                    </h2>
+    <div className="welcome-mountain">
+      <svg viewBox="0 0 120 80">
+        <circle
+          cx="35"
+          cy="25"
+          r="18"
+          className="welcome-sun"
+        />
 
-                    <p>
-                      Aquí tienes un resumen
-                      de tus tareas.
-                    </p>
+        <path
+          className="welcome-mountain-back"
+          d="M0 70 L32 35 L50 52 L66 28 L105 70 Z"
+        />
 
-                  </div>
+        <path
+          className="welcome-mountain-front"
+          d="M20 70 L62 15 L110 70 Z"
+        />
 
-                  <div className="dashboard-actions">
+        <path
+          className="welcome-snow"
+          d="M62 15 L49 34 L58 31 L64 39 L72 29 Z"
+        />
+      </svg>
+    </div>
 
-                    <button
-                      className="dashboard-primary"
-                      onClick={() =>
-                        setSeccion('pendientes')
-                      }
-                    >
-                      + Nueva tarea
-                    </button>
+    <div className="dashboard-welcome-text">
 
-                    <button
-                      className="dashboard-secondary"
-                      onClick={() =>
-                        setSeccion('pendientes')
-                      }
-                    >
-                      Ver tareas
-                    </button>
+      <h2>
+        Hola, {usuario?.user_metadata?.nombre || 'Usuario'} 👋
+      </h2>
 
-                  </div>
+      <p>
+        Revisa tus tareas pendientes
+        y continúa avanzando.
+      </p>
 
-                </div>
+    </div>
+
+  </div>
+
+  <button
+    className="dashboard-primary"
+    onClick={irACrearTarea}
+  >
+    + Nueva tarea
+  </button>
+
+</div>
 
                 <h2 className="dashboard-section-title">
                   Resumen
@@ -1411,249 +1501,336 @@ const vaciarPapelera = async () => {
 
                 {/* PROGRESO */}
 
-                <div className="progress-section">
+               <div className="progress-section progress-premium">
 
-                  <div className="progress-header">
+  <div
+    className="progress-circle"
+    style={{
+      '--progress':
+        `${porcentajeCompletado * 3.6}deg`
+    }}
+  >
 
-                    <span>
-                      Progreso general
-                    </span>
+    <div className="progress-circle-inner">
 
-                    <span>
-                      {porcentajeCompletado}%
-                    </span>
+      <strong>
+        {porcentajeCompletado}%
+      </strong>
 
-                  </div>
+      <span>
+        Completado
+      </span>
 
-                  <div className="progress-bar">
+    </div>
 
-                    <div
-                      className="progress-fill"
-                      style={{
-                        width:
-                          `${porcentajeCompletado}%`
-                      }}
-                    />
+  </div>
 
-                  </div>
+  <div className="progress-center">
 
-                  <p>
-                    {tareasRealizadas.length}{' '}
-                    de {totalTareas} tareas completadas
-                  </p>
+    <h3>
+      Progreso general
+    </h3>
 
-                </div>
+    <p>
+      {tareasRealizadas.length} de {totalTareas} tareas completadas
+    </p>
 
-                {/* PARA HOY */}
+    <div className="progress-segments">
 
-                <div className="today-section">
+      {Array.from({ length: 10 }).map(
+        (_, index) => {
 
-                  <div className="today-header">
+          const segmentosActivos =
+            Math.round(
+              porcentajeCompletado / 10
+            )
 
-                    <div>
+          return (
+            <span
+              key={index}
+              className={
+                index < segmentosActivos
+                  ? 'progress-segment active'
+                  : 'progress-segment'
+              }
+            />
+          )
+        }
+      )}
 
-                      <h2>
-                        Para hoy
-                      </h2>
+    </div>
 
-                      <p>
-                        {tareasDeHoy.length === 0
-                          ? 'No tienes tareas que venzan hoy.'
-                          : `Tienes ${tareasDeHoy.length} ${
-                              tareasDeHoy.length === 1
-                                ? 'tarea'
-                                : 'tareas'
-                            } para hoy.`}
-                      </p>
+  </div>
 
-                    </div>
+  <div className="progress-mountain">
 
-                    <div className="today-icon">
-                      📅
-                    </div>
+    <svg viewBox="0 0 180 110">
 
-                  </div>
+      <path
+        className="progress-mountain-back"
+        d="M0 100 L45 55 L70 76 L100 35 L160 100 Z"
+      />
 
-                  {tareasDeHoy.length === 0 ? (
+      <path
+        className="progress-mountain-front"
+        d="M45 100 L110 18 L180 100 Z"
+      />
 
-                    <div className="today-empty">
+      <path
+        className="progress-mountain-snow"
+        d="M110 18 L92 42 L104 38 L112 49 L123 36 Z"
+      />
 
-                      <span>
-                        🎉
-                      </span>
+      <path
+        className="progress-trees"
+        d="
+          M20 100 L28 77 L36 100
+          M38 100 L47 72 L56 100
+          M132 100 L142 72 L152 100
+          M150 100 L160 78 L170 100
+        "
+      />
 
-                      <div>
+    </svg>
 
-                        <strong>
-                          Todo tranquilo por hoy
-                        </strong>
+  </div>
 
-                        <p>
-                          No tienes tareas con
-                          vencimiento para hoy.
-                        </p>
+</div>
 
-                      </div>
+              {/* PARA HOY + PRÓXIMAS */}
 
-                    </div>
+<div className="dashboard-task-grid">
 
-                  ) : (
+  {/* PARA HOY */}
 
-                    tareasDeHoy.map(
-                      (item) => (
+  <section className="dashboard-list-card">
 
-                        <div
-                          className={`today-task today-${item.prioridad}`}
-                          key={item.id}
-                          onClick={() =>
-                            setTareaSeleccionada(item)
-                          }
-                        >
+    <div className="dashboard-list-header">
 
-                          <div className="today-task-info">
+      <div>
 
-                            <span className="today-task-name">
-                              {item.nombre}
-                            </span>
+        <h2>
+          <span className="dashboard-list-icon">
+            📅
+          </span>
 
-                            <div className="today-task-details">
+          Para hoy
+        </h2>
 
-                              <span
-                                className={`prioridad prioridad-${item.prioridad}`}
-                              >
-                                {obtenerNombrePrioridad(
-                                  item.prioridad
-                                )}
-                              </span>
+        <p>
+          {tareasDeHoy.length === 0
+            ? 'No tienes tareas pendientes'
+            : `${tareasDeHoy.length} ${
+                tareasDeHoy.length === 1
+                  ? 'tarea pendiente'
+                  : 'tareas pendientes'
+              }`}
+        </p>
 
-                              <span className="today-badge">
-                                Vence hoy
-                              </span>
-
-                            </div>
+      </div>
 
-                          </div>
+    </div>
 
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setTareaSeleccionada(item)
-                            }}
-                          >
-                            Ver tarea
-                          </button>
+    <div className="dashboard-list-content">
 
-                        </div>
-
-                      )
-                    )
+      {tareasDeHoy.length === 0 ? (
 
-                  )}
+        <div className="dashboard-list-empty">
 
-                </div>
+          <span>🎉</span>
 
-                {/* PRÓXIMAS */}
+          <div>
+            <strong>
+              Todo tranquilo por hoy
+            </strong>
 
-                <div className="upcoming-section">
+            <p>
+              No tienes tareas que venzan hoy.
+            </p>
+          </div>
 
-                  <div className="upcoming-header">
+        </div>
 
-                    <h2>
-                      Próximas tareas
-                    </h2>
+      ) : (
 
-                    <button
-                      onClick={() =>
-                        setSeccion('pendientes')
-                      }
-                    >
-                      Ver todas
-                    </button>
+        tareasDeHoy.map((item) => (
 
-                  </div>
+          <div
+            className="dashboard-task-row"
+            key={item.id}
+            onClick={() =>
+              setTareaSeleccionada(item)
+            }
+          >
 
-                  {proximasTareas.length === 0 ? (
+            <span className="dashboard-task-dot" />
 
-                    <p className="empty-message">
-                      🎉 No tienes tareas pendientes.
-                    </p>
+            <div className="dashboard-task-main">
 
-                  ) : (
+              <strong>
+                {item.nombre}
+              </strong>
 
-                    proximasTareas.map(
-                      (item) => (
+            </div>
 
-                        <div
-                          className="upcoming-task"
-                          key={item.id}
-                          onClick={() =>
-                            setTareaSeleccionada(item)
-                          }
-                        >
+            <span
+              className={`dashboard-priority dashboard-priority-${item.prioridad}`}
+            >
+              {item.prioridad === 'alta' && '🔥 '}
+              {item.prioridad === 'media' && '● '}
+              {item.prioridad === 'baja' && '✓ '}
 
-                          <div className="upcoming-info">
+              {obtenerNombrePrioridad(
+                item.prioridad
+              )}
+            </span>
 
-                            <span className="upcoming-name">
-                              {item.nombre}
-                            </span>
+            <span className="dashboard-task-date">
+              Hoy
+            </span>
 
-                            <div className="upcoming-details">
+          </div>
 
-                              <span
-                                className={`prioridad prioridad-${item.prioridad}`}
-                              >
-                                {obtenerNombrePrioridad(
-                                  item.prioridad
-                                )}
-                              </span>
+        ))
 
-                              <div className="task-date-info">
+      )}
 
-                                <span
-                                  className={`fecha-limite fecha-${obtenerEstadoFecha(
-                                    item.fechaLimite
-                                  )}`}
-                                >
-                                  📅{' '}
-                                  {formatearFecha(
-                                    item.fechaLimite
-                                  )}
-                                </span>
+    </div>
 
-                                <span
-                                  className={`fecha-texto texto-${obtenerEstadoFecha(
-                                    item.fechaLimite
-                                  )}`}
-                                >
-                                  {obtenerTextoFecha(
-                                    item.fechaLimite
-                                  )}
-                                </span>
+    <button
+      className="dashboard-list-link"
+      onClick={() =>
+        setSeccion('pendientes')
+      }
+    >
+      <span>
+        Ver todas mis tareas
+      </span>
 
-                              </div>
+      <span>
+        →
+      </span>
+    </button>
 
-                            </div>
+  </section>
 
-                          </div>
 
-                          <button
-                            className="upcoming-open"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setTareaSeleccionada(item)
-                            }}
-                          >
-                            Ver
-                          </button>
+  {/* PRÓXIMAS TAREAS */}
 
-                        </div>
+  <section className="dashboard-list-card">
 
-                      )
-                    )
+    <div className="dashboard-list-header">
 
-                  )}
+      <div>
 
-                </div>
+        <h2>
+          <span className="dashboard-list-icon">
+            🗓️
+          </span>
+
+          Próximas tareas
+        </h2>
+
+        <p>
+          {proximasTareas.length === 0
+            ? 'No tienes tareas programadas'
+            : `${proximasTareas.length} ${
+                proximasTareas.length === 1
+                  ? 'tarea programada'
+                  : 'tareas programadas'
+              }`}
+        </p>
+
+      </div>
+
+    </div>
+
+    <div className="dashboard-list-content">
+
+      {proximasTareas.length === 0 ? (
+
+        <div className="dashboard-list-empty">
+
+          <span>🏔️</span>
+
+          <div>
+            <strong>
+              Sin tareas próximas
+            </strong>
+
+            <p>
+              Estás al día con tus tareas.
+            </p>
+          </div>
+
+        </div>
+
+      ) : (
+
+        proximasTareas.map((item) => (
+
+          <div
+            className="dashboard-task-row"
+            key={item.id}
+            onClick={() =>
+              setTareaSeleccionada(item)
+            }
+          >
+
+            <span className="dashboard-task-dot" />
+
+            <div className="dashboard-task-main">
+
+              <strong>
+                {item.nombre}
+              </strong>
+
+            </div>
+
+            <span className="dashboard-task-date">
+              {formatearFecha(
+                item.fechaLimite
+              )}
+            </span>
+
+            <span
+              className={`dashboard-priority dashboard-priority-${item.prioridad}`}
+            >
+              {item.prioridad === 'alta' && '🔥 '}
+              {item.prioridad === 'media' && '● '}
+              {item.prioridad === 'baja' && '✓ '}
+
+              {obtenerNombrePrioridad(
+                item.prioridad
+              )}
+            </span>
+
+          </div>
+
+        ))
+
+      )}
+
+    </div>
+
+    <button
+      className="dashboard-list-link"
+      onClick={() =>
+        setSeccion('pendientes')
+      }
+    >
+      <span>
+        Ver todas las tareas
+      </span>
+
+      <span>
+        →
+      </span>
+    </button>
+
+  </section>
+
+</div>  
 
               </section>
 
@@ -1669,10 +1846,134 @@ const vaciarPapelera = async () => {
         {seccion === 'pendientes' && (
           <>
 
-            <section
-              className="task-form"
-              ref={formularioRef}
-            >
+            {/* =========================
+                RESUMEN MIS TAREAS
+            ========================= */}
+
+            <section className="tasks-page-overview">
+
+              <div className="tasks-overview-progress">
+
+                <div
+                  className="tasks-overview-circle"
+                  style={{
+                    '--tasks-progress':
+                      `${porcentajeCompletado * 3.6}deg`
+                  }}
+                >
+                  <div className="tasks-overview-circle-inner">
+                    <strong>
+                      {porcentajeCompletado}%
+                    </strong>
+
+                    <span>
+                      Completado
+                    </span>
+                  </div>
+                </div>
+
+                <div className="tasks-overview-info">
+
+                  <span className="tasks-overview-kicker">
+                    Tu progreso
+                  </span>
+
+                  <h2>
+                    ¡Buen progreso, {usuario?.user_metadata?.nombre || 'Usuario'}! 🏔️
+                  </h2>
+
+                  <p>
+                    {tareasRealizadas.length} de {totalTareas} tareas completadas.
+                    Sigue avanzando hacia tu Cumbre.
+                  </p>
+
+                  <div className="tasks-overview-segments">
+                    {Array.from({ length: 10 }).map(
+                      (_, index) => {
+                        const segmentosActivos =
+                          Math.round(
+                            porcentajeCompletado / 10
+                          )
+
+                        return (
+                          <span
+                            key={index}
+                            className={
+                              index < segmentosActivos
+                                ? 'tasks-overview-segment active'
+                                : 'tasks-overview-segment'
+                            }
+                          />
+                        )
+                      }
+                    )}
+                  </div>
+
+                </div>
+
+                <div className="tasks-overview-stats">
+
+                  <div className="tasks-overview-stat">
+                    <strong>
+                      {tareas.length}
+                    </strong>
+
+                    <span>
+                      Pendientes
+                    </span>
+                  </div>
+
+                  <div className="tasks-overview-stat completed">
+                    <strong>
+                      {tareasRealizadas.length}
+                    </strong>
+
+                    <span>
+                      Completadas
+                    </span>
+                  </div>
+
+                </div>
+
+              </div>
+
+              <div className="tasks-overview-mountain">
+                <svg
+                  viewBox="0 0 180 100"
+                  aria-hidden="true"
+                >
+                  <circle
+                    cx="36"
+                    cy="28"
+                    r="16"
+                    className="tasks-overview-sun"
+                  />
+
+                  <path
+                    className="tasks-overview-mountain-back"
+                    d="M0 92 L42 52 L68 74 L92 42 L150 92 Z"
+                  />
+
+                  <path
+                    className="tasks-overview-mountain-front"
+                    d="M38 92 L110 14 L180 92 Z"
+                  />
+
+                  <path
+                    className="tasks-overview-snow"
+                    d="M110 14 L92 37 L104 33 L112 44 L125 31 Z"
+                  />
+                </svg>
+              </div>
+
+            </section>
+
+            <div className="tasks-workspace">
+
+              <section
+                className="task-form"
+                ref={formularioRef}
+              >
 
               <h2>
                 Nueva tarea
@@ -1767,6 +2068,97 @@ const vaciarPapelera = async () => {
               </div>
 
             </section>
+
+              <aside className="tasks-preview-card">
+
+                <div className="tasks-preview-header">
+
+                  <div>
+                    <span className="tasks-preview-kicker">
+                      Próximas
+                    </span>
+
+                    <h3>
+                      Tareas próximas
+                    </h3>
+                  </div>
+
+                  <span className="tasks-preview-count">
+                    {proximasTareas.length}
+                  </span>
+
+                </div>
+
+                <div className="tasks-preview-list">
+
+                  {proximasTareas.length === 0 ? (
+
+                    <div className="tasks-preview-empty">
+                      <span>🏔️</span>
+
+                      <p>
+                        No tienes tareas próximas.
+                      </p>
+                    </div>
+
+                  ) : (
+
+                    proximasTareas.map((item) => (
+
+                      <button
+                        type="button"
+                        className="tasks-preview-item"
+                        key={item.id}
+                        onClick={() =>
+                          setTareaSeleccionada(item)
+                        }
+                      >
+
+                        <span className="tasks-preview-dot" />
+
+                        <span className="tasks-preview-name">
+                          {item.nombre}
+                        </span>
+
+                        <span
+                          className={`tasks-preview-priority tasks-preview-${item.prioridad}`}
+                        >
+                          {item.prioridad === 'alta'
+                            ? 'Alta'
+                            : item.prioridad === 'media'
+                              ? 'Media'
+                              : 'Baja'}
+                        </span>
+
+                        <span className="tasks-preview-date">
+                          {formatearFecha(
+                            item.fechaLimite
+                          )}
+                        </span>
+
+                      </button>
+
+                    ))
+
+                  )}
+
+                </div>
+
+                <button
+                  type="button"
+                  className="tasks-preview-link"
+                  onClick={() => {
+                    setBusqueda('')
+                    setFiltro('todas')
+                  }}
+                >
+                  Ver todas mis tareas
+                  <span>→</span>
+                </button>
+
+              </aside>
+
+            </div>
 
             <section className="task-list">
 
