@@ -8,6 +8,7 @@ function App() {
   const [usuario, setUsuario] = useState(null)
   const [cargandoSesion, setCargandoSesion] = useState(true)
   const formularioRef = useRef(null)
+  const [splashActivo, setSplashActivo] = useState(true)
 
   const [tarea, setTarea] = useState('')
   const [descripcion, setDescripcion] = useState('')
@@ -40,6 +41,14 @@ function App() {
   const [descripcionEditada, setDescripcionEditada] = useState('')
   const [prioridadEditada, setPrioridadEditada] = useState('media')
   const [fechaEditada, setFechaEditada] = useState('')
+
+  useEffect(() => {
+  const timerSplash = setTimeout(() => {
+    setSplashActivo(false)
+  }, 1200)
+
+  return () => clearTimeout(timerSplash)
+}, [])
 
   useEffect(() => {
   const cargarSesion = async () => {
@@ -1608,37 +1617,37 @@ const vaciarPapelera = async () => {
     )
   }
 
-    if (cargandoSesion) {
-      return (
-        <div className="cumbre-loading-screen">
-          <div className="cumbre-loading-content">
-            <div className="cumbre-loading-logo" aria-hidden="true">
-              <svg viewBox="0 0 64 48">
-                <path
-                  className="cumbre-loading-mountain-back"
-                  d="M2 43 L22 15 L34 31 L42 21 L62 43 Z"
-                />
-                <path
-                  className="cumbre-loading-mountain-front"
-                  d="M14 43 L38 7 L62 43 Z"
-                />
-                <path
-                  className="cumbre-loading-snow"
-                  d="M38 7 L29 21 L36 18 L40 24 L45 18 Z"
-                />
-              </svg>
-            </div>
-
-            <strong>Cumbre</strong>
-            <span>Preparando tu espacio...</span>
-
-            <div className="cumbre-loading-bar" aria-label="Cargando">
-              <div className="cumbre-loading-bar-fill" />
-            </div>
-          </div>
+    if (splashActivo || cargandoSesion) {
+  return (
+    <div className="cumbre-loading-screen">
+      <div className="cumbre-loading-content">
+        <div className="cumbre-loading-logo" aria-hidden="true">
+          <svg viewBox="0 0 64 48">
+            <path
+              className="cumbre-loading-mountain-back"
+              d="M2 43 L22 15 L34 31 L42 21 L62 43 Z"
+            />
+            <path
+              className="cumbre-loading-mountain-front"
+              d="M14 43 L38 7 L62 43 Z"
+            />
+            <path
+              className="cumbre-loading-snow"
+              d="M38 7 L29 21 L36 18 L40 24 L45 18 Z"
+            />
+          </svg>
         </div>
-      )
-    }
+
+        <strong>Cumbre</strong>
+        <span>Preparando tu espacio...</span>
+
+        <div className="cumbre-loading-bar" aria-label="Cargando">
+          <div className="cumbre-loading-bar-fill" />
+        </div>
+      </div>
+    </div>
+  )
+}
 
     if (!usuario) {
   return (
