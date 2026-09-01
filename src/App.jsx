@@ -1656,6 +1656,37 @@ const vaciarPapelera = async () => {
     />
   )
 }
+const activarNotificaciones = async () => {
+  try {
+    if (!('Notification' in window)) {
+      alert('Este dispositivo no admite notificaciones.')
+      return
+    }
+
+    if (!('serviceWorker' in navigator)) {
+      alert('El navegador no admite Service Worker.')
+      return
+    }
+
+    const permiso = await Notification.requestPermission()
+
+    if (permiso !== 'granted') {
+      alert('Debes permitir las notificaciones para recibir recordatorios.')
+      return
+    }
+
+    const registro = await navigator.serviceWorker.ready
+
+    await registro.showNotification('Cumbre 🏔️', {
+      body: '¡Las notificaciones están funcionando correctamente!',
+      icon: '/pwa-192x192.png',
+      badge: '/pwa-192x192.png',
+    })
+  } catch (error) {
+    console.error('Error al activar notificaciones:', error)
+    alert('No se pudo mostrar la notificación.')
+  }
+}
 
   return (
   <div
@@ -2056,6 +2087,13 @@ const vaciarPapelera = async () => {
   >
     + Nueva tarea
   </button>
+  
+  <button
+  className="dashboard-primary"
+  onClick={activarNotificaciones}
+>
+  🔔 Activar notificaciones
+</button>
 
 </div>
 
