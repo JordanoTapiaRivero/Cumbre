@@ -29,6 +29,10 @@ function App() {
   const [filtro, setFiltro] = useState('todas')
   const [busquedaRealizadas, setBusquedaRealizadas] = useState('')
 
+  const [paginaPendientes, setPaginaPendientes] = useState(1)
+  const [paginaRealizadas, setPaginaRealizadas] = useState(1)
+  const [paginaPapelera, setPaginaPapelera] = useState(1)
+
   const [menuTareaAbierto, setMenuTareaAbierto] = useState(null)
 
   const [tareaEditando, setTareaEditando] = useState(null)
@@ -150,6 +154,8 @@ useEffect(() => {
     confirmarVaciarPapelera,
     setConfirmarVaciarPapelera
   ] = useState(false)
+
+  const [confirmarCerrarSesion, setConfirmarCerrarSesion] = useState(false)
 
   const [, setFechaActual] = useState('')
 
@@ -1094,6 +1100,539 @@ const vaciarPapelera = async () => {
       )
     }).length
 
+
+  /* =========================
+     OBJETIVO DIARIO + RACHAS
+  ========================= */
+
+  const OBJETIVO_DIARIO = 3
+
+  const obtenerClaveFechaLocal = (fecha) => {
+    const fechaObjeto =
+      fecha instanceof Date
+        ? fecha
+        : new Date(fecha)
+
+    const año = fechaObjeto.getFullYear()
+    const mes = String(
+      fechaObjeto.getMonth() + 1
+    ).padStart(2, '0')
+    const dia = String(
+      fechaObjeto.getDate()
+    ).padStart(2, '0')
+
+    return `${año}-${mes}-${dia}`
+  }
+
+  const completadasPorDia =
+    tareasRealizadas.reduce(
+      (acumulador, item) => {
+        if (!item.fechaCompletada) {
+          return acumulador
+        }
+
+        const clave =
+          obtenerClaveFechaLocal(
+            item.fechaCompletada
+          )
+
+        acumulador[clave] =
+          (acumulador[clave] || 0) + 1
+
+        return acumulador
+      },
+      {}
+    )
+
+  const hoyObjetivo = new Date()
+  const claveHoy =
+    obtenerClaveFechaLocal(
+      hoyObjetivo
+    )
+
+  const completadasObjetivoHoy =
+    completadasPorDia[claveHoy] || 0
+
+  const porcentajeObjetivoHoy =
+    Math.min(
+      100,
+      Math.round(
+        (
+          completadasObjetivoHoy /
+          OBJETIVO_DIARIO
+        ) * 100
+      )
+    )
+
+  const tareasFaltantesObjetivo =
+    Math.max(
+      0,
+      OBJETIVO_DIARIO -
+        completadasObjetivoHoy
+    )
+
+  const diasObjetivoCumplido =
+    new Set(
+      Object.entries(
+        completadasPorDia
+      )
+        .filter(
+          ([, cantidad]) =>
+            cantidad >= OBJETIVO_DIARIO
+        )
+        .map(([fecha]) => fecha)
+    )
+
+  const calcularRachaActual = () => {
+    let fechaCursor = new Date()
+    let racha = 0
+
+    const hoyCumplido =
+      diasObjetivoCumplido.has(
+        obtenerClaveFechaLocal(
+          fechaCursor
+        )
+      )
+
+    if (!hoyCumplido) {
+      fechaCursor.setDate(
+        fechaCursor.getDate() - 1
+      )
+    }
+
+    while (
+      diasObjetivoCumplido.has(
+        obtenerClaveFechaLocal(
+          fechaCursor
+        )
+      )
+    ) {
+      racha += 1
+
+      fechaCursor.setDate(
+        fechaCursor.getDate() - 1
+      )
+    }
+
+    return racha
+  }
+
+  const calcularMejorRacha = () => {
+    const fechasCumplidas =
+      Array.from(
+        diasObjetivoCumplido
+      ).sort()
+
+    if (
+      fechasCumplidas.length === 0
+    ) {
+      return 0
+    }
+
+    let mejorRacha = 1
+    let rachaTemporal = 1
+
+    for (
+      let i = 1;
+      i < fechasCumplidas.length;
+      i += 1
+    ) {
+      const fechaAnterior =
+        new Date(
+          `${fechasCumplidas[i - 1]}T12:00:00`
+        )
+
+      const fechaActual =
+        new Date(
+          `${fechasCumplidas[i]}T12:00:00`
+        )
+
+      const diferenciaDias =
+        Math.round(
+          (
+            fechaActual -
+            fechaAnterior
+          ) /
+            (1000 * 60 * 60 * 24)
+        )
+
+      if (diferenciaDias === 1) {
+        rachaTemporal += 1
+      } else {
+        rachaTemporal = 1
+      }
+
+      mejorRacha =
+        Math.max(
+          mejorRacha,
+          rachaTemporal
+        )
+    }
+
+    return mejorRacha
+  }
+
+  const rachaActual =
+    calcularRachaActual()
+
+  const mejorRacha =
+    calcularMejorRacha()
+
+  const inicioSemana = new Date()
+  const diaSemana =
+    inicioSemana.getDay()
+
+  const diferenciaLunes =
+    diaSemana === 0
+      ? -6
+      : 1 - diaSemana
+
+  inicioSemana.setDate(
+    inicioSemana.getDate() +
+      diferenciaLunes
+  )
+
+  inicioSemana.setHours(
+    0,
+    0,
+    0,
+    0
+  )
+
+  const diasSemanaObjetivo =
+    Array.from(
+      { length: 7 },
+      (_, index) => {
+        const fecha =
+          new Date(inicioSemana)
+
+        fecha.setDate(
+          inicioSemana.getDate() +
+            index
+        )
+
+        const clave =
+          obtenerClaveFechaLocal(
+            fecha
+          )
+
+        const cantidad =
+          completadasPorDia[
+            clave
+          ] || 0
+
+        const hoy =
+          obtenerClaveFechaLocal(
+            new Date()
+          )
+
+        return {
+          clave,
+          letra:
+            [
+              'L',
+              'M',
+              'X',
+              'J',
+              'V',
+              'S',
+              'D'
+            ][index],
+          cantidad,
+          cumplido:
+            cantidad >=
+            OBJETIVO_DIARIO,
+          esHoy:
+            clave === hoy,
+          esFuturo:
+            fecha >
+            new Date(
+              new Date().setHours(
+                23,
+                59,
+                59,
+                999
+              )
+            )
+        }
+      }
+    )
+
+
+  /* =========================
+     PAGINACIÓN
+  ========================= */
+
+  const TAREAS_POR_PAGINA = 10
+
+  const tareasPendientesFiltradas =
+    ordenarTareas(
+      aplicarFiltro(
+        filtrarTareas(tareas)
+      )
+    )
+
+  const tareasRealizadasFiltradas =
+    tareasRealizadas.filter((item) => {
+      const textoBusqueda =
+        busquedaRealizadas
+          .trim()
+          .toLowerCase()
+
+      if (textoBusqueda === '') {
+        return true
+      }
+
+      return (
+        (item.nombre || '')
+          .toLowerCase()
+          .includes(textoBusqueda) ||
+        (item.descripcion || '')
+          .toLowerCase()
+          .includes(textoBusqueda)
+      )
+    })
+
+  const totalPaginasPendientes =
+    Math.max(
+      1,
+      Math.ceil(
+        tareasPendientesFiltradas.length /
+          TAREAS_POR_PAGINA
+      )
+    )
+
+  const totalPaginasRealizadas =
+    Math.max(
+      1,
+      Math.ceil(
+        tareasRealizadasFiltradas.length /
+          TAREAS_POR_PAGINA
+      )
+    )
+
+  const totalPaginasPapelera =
+    Math.max(
+      1,
+      Math.ceil(
+        tareasEliminadas.length /
+          TAREAS_POR_PAGINA
+      )
+    )
+
+  const tareasPendientesPaginadas =
+    tareasPendientesFiltradas.slice(
+      (paginaPendientes - 1) *
+        TAREAS_POR_PAGINA,
+      paginaPendientes *
+        TAREAS_POR_PAGINA
+    )
+
+  const tareasRealizadasPaginadas =
+    tareasRealizadasFiltradas.slice(
+      (paginaRealizadas - 1) *
+        TAREAS_POR_PAGINA,
+      paginaRealizadas *
+        TAREAS_POR_PAGINA
+    )
+
+  const tareasPapeleraPaginadas =
+    tareasEliminadas.slice(
+      (paginaPapelera - 1) *
+        TAREAS_POR_PAGINA,
+      paginaPapelera *
+        TAREAS_POR_PAGINA
+    )
+
+  useEffect(() => {
+    setPaginaPendientes(1)
+  }, [busqueda, filtro])
+
+  useEffect(() => {
+    setPaginaRealizadas(1)
+  }, [busquedaRealizadas])
+
+  useEffect(() => {
+    setPaginaPendientes(
+      (paginaActual) =>
+        Math.min(
+          paginaActual,
+          totalPaginasPendientes
+        )
+    )
+  }, [totalPaginasPendientes])
+
+  useEffect(() => {
+    setPaginaRealizadas(
+      (paginaActual) =>
+        Math.min(
+          paginaActual,
+          totalPaginasRealizadas
+        )
+    )
+  }, [totalPaginasRealizadas])
+
+  useEffect(() => {
+    setPaginaPapelera(
+      (paginaActual) =>
+        Math.min(
+          paginaActual,
+          totalPaginasPapelera
+        )
+    )
+  }, [totalPaginasPapelera])
+
+  const obtenerPaginasVisibles = (
+    paginaActual,
+    totalPaginas
+  ) => {
+    if (totalPaginas <= 7) {
+      return Array.from(
+        { length: totalPaginas },
+        (_, index) => index + 1
+      )
+    }
+
+    if (paginaActual <= 4) {
+      return [
+        1,
+        2,
+        3,
+        4,
+        5,
+        '...',
+        totalPaginas
+      ]
+    }
+
+    if (
+      paginaActual >=
+      totalPaginas - 3
+    ) {
+      return [
+        1,
+        '...',
+        totalPaginas - 4,
+        totalPaginas - 3,
+        totalPaginas - 2,
+        totalPaginas - 1,
+        totalPaginas
+      ]
+    }
+
+    return [
+      1,
+      '...',
+      paginaActual - 1,
+      paginaActual,
+      paginaActual + 1,
+      '...',
+      totalPaginas
+    ]
+  }
+
+  const renderPaginacion = (
+    paginaActual,
+    totalPaginas,
+    cambiarPagina
+  ) => {
+    if (totalPaginas <= 1) {
+      return null
+    }
+
+    const paginas =
+      obtenerPaginasVisibles(
+        paginaActual,
+        totalPaginas
+      )
+
+    return (
+      <nav
+        className="pagination"
+        aria-label="Paginación"
+      >
+
+        <button
+          type="button"
+          className="pagination-arrow"
+          onClick={() =>
+            cambiarPagina(
+              paginaActual - 1
+            )
+          }
+          disabled={
+            paginaActual === 1
+          }
+          aria-label="Página anterior"
+        >
+          ‹
+        </button>
+
+        <div className="pagination-pages">
+
+          {paginas.map(
+            (pagina, index) =>
+              pagina === '...' ? (
+
+                <span
+                  className="pagination-dots"
+                  key={`dots-${index}`}
+                >
+                  …
+                </span>
+
+              ) : (
+
+                <button
+                  type="button"
+                  key={pagina}
+                  className={
+                    pagina ===
+                    paginaActual
+                      ? 'pagination-number active'
+                      : 'pagination-number'
+                  }
+                  onClick={() =>
+                    cambiarPagina(
+                      pagina
+                    )
+                  }
+                  aria-current={
+                    pagina ===
+                    paginaActual
+                      ? 'page'
+                      : undefined
+                  }
+                >
+                  {pagina}
+                </button>
+
+              )
+          )}
+
+        </div>
+
+        <button
+          type="button"
+          className="pagination-arrow"
+          onClick={() =>
+            cambiarPagina(
+              paginaActual + 1
+            )
+          }
+          disabled={
+            paginaActual ===
+            totalPaginas
+          }
+          aria-label="Página siguiente"
+        >
+          ›
+        </button>
+
+      </nav>
+    )
+  }
+
     if (cargandoSesion) {
   return null
 }
@@ -1243,84 +1782,164 @@ const vaciarPapelera = async () => {
 
         <aside className="sidebar">
 
-          <div className="sidebar-header">
+          <div className="sidebar-brand">
 
-            <h2>
-              Menú
-            </h2>
+            <div className="sidebar-brand-logo">
+              <svg viewBox="0 0 64 48" aria-hidden="true">
+                <path
+                  className="sidebar-brand-mountain-back"
+                  d="M2 43 L20 23 L29 32 L39 17 L62 43 Z"
+                />
+                <path
+                  className="sidebar-brand-mountain-front"
+                  d="M18 43 L39 10 L63 43 Z"
+                />
+                <path
+                  className="sidebar-brand-snow"
+                  d="M39 10 L33 20 L38 18 L41 23 L46 17 Z"
+                />
+              </svg>
+            </div>
+
+            <div>
+              <strong>Cumbre</strong>
+              <span>Tu espacio personal</span>
+            </div>
 
             <button
               className="close-menu"
               onClick={() =>
                 setMenuAbierto(false)
               }
+              aria-label="Cerrar menú"
             >
               ✕
             </button>
 
           </div>
 
-          <button
-            className="sidebar-option"
-            onClick={() => {
-              setSeccion('inicio')
-              setMenuAbierto(false)
-            }}
-          >
-            🏠 Inicio
-          </button>
+          <div className="sidebar-user-card">
 
-          <button
-            className="sidebar-option"
-            onClick={() => {
-              setSeccion('pendientes')
-              setMenuAbierto(false)
-            }}
-          >
-            📋 Mis tareas
-          </button>
+            <div className="sidebar-user-avatar">
+              {(usuario?.user_metadata?.nombre || 'U')
+                .charAt(0)
+                .toUpperCase()}
+            </div>
 
-          <button
-            className="sidebar-option"
-            onClick={() => {
-              setSeccion('realizadas')
-              setMenuAbierto(false)
-            }}
-          >
-            ✅ Tareas realizadas
-          </button>
+            <div className="sidebar-user-info">
+              <strong>
+                {usuario?.user_metadata?.nombre || 'Usuario'}
+              </strong>
+              <span>
+                {usuario?.email || ''}
+              </span>
+            </div>
 
-          <button
-            className="sidebar-option"
-            onClick={() => {
-              setSeccion('papelera')
-              setMenuAbierto(false)
-            }}
-          >
-            🗑️ Papelera
-          </button>
+          </div>
 
-          <div className="sidebar-divider"></div>
+          <nav className="sidebar-nav">
 
-<button
-  className="sidebar-option sidebar-logout"
-  onClick={async () => {
-    const { error } = await supabase.auth.signOut()
+            <span className="sidebar-section-label">
+              Principal
+            </span>
 
-    if (error) {
-      console.error(
-        'Error al cerrar sesión:',
-        error.message
-      )
-      return
-    }
+            <button
+              className={`sidebar-option ${
+                seccion === 'inicio'
+                  ? 'active'
+                  : ''
+              }`}
+              onClick={() => {
+                setSeccion('inicio')
+                setMenuAbierto(false)
+              }}
+            >
+              <span className="sidebar-option-icon">⌂</span>
+              <span>Inicio</span>
+            </button>
 
-    setUsuario(null)
-    setMenuAbierto(false)
-  }}
->
-  🚪 Cerrar sesión
-</button>
+            <button
+              className={`sidebar-option ${
+                seccion === 'pendientes'
+                  ? 'active'
+                  : ''
+              }`}
+              onClick={() => {
+                setSeccion('pendientes')
+                setMenuAbierto(false)
+              }}
+            >
+              <span className="sidebar-option-icon">☷</span>
+              <span>Mis tareas</span>
+
+              {tareas.length > 0 && (
+                <span className="sidebar-count">
+                  {tareas.length}
+                </span>
+              )}
+            </button>
+
+            <button
+              className={`sidebar-option ${
+                seccion === 'realizadas'
+                  ? 'active'
+                  : ''
+              }`}
+              onClick={() => {
+                setSeccion('realizadas')
+                setMenuAbierto(false)
+              }}
+            >
+              <span className="sidebar-option-icon">✓</span>
+              <span>Tareas realizadas</span>
+
+              {tareasRealizadas.length > 0 && (
+                <span className="sidebar-count">
+                  {tareasRealizadas.length}
+                </span>
+              )}
+            </button>
+
+            <span className="sidebar-section-label sidebar-section-secondary">
+              Gestión
+            </span>
+
+            <button
+              className={`sidebar-option ${
+                seccion === 'papelera'
+                  ? 'active'
+                  : ''
+              }`}
+              onClick={() => {
+                setSeccion('papelera')
+                setMenuAbierto(false)
+              }}
+            >
+              <span className="sidebar-option-icon">♲</span>
+              <span>Papelera</span>
+
+              {tareasEliminadas.length > 0 && (
+                <span className="sidebar-count">
+                  {tareasEliminadas.length}
+                </span>
+              )}
+            </button>
+
+          </nav>
+
+          <div className="sidebar-footer">
+
+            <button
+              className="sidebar-option sidebar-logout"
+              onClick={() => {
+                setConfirmarCerrarSesion(true)
+              }}
+            >
+              <span className="sidebar-option-icon">↪</span>
+              <span>Cerrar sesión</span>
+            </button>
+
+          </div>
 
         </aside>
 
@@ -1427,6 +2046,153 @@ const vaciarPapelera = async () => {
   </button>
 
 </div>
+
+                {/* OBJETIVO DIARIO + RACHA */}
+
+                <section className="daily-goal-card">
+
+                  <div className="daily-goal-main">
+
+                    <div
+                      className="daily-goal-circle"
+                      style={{
+                        '--goal-progress':
+                          `${porcentajeObjetivoHoy * 3.6}deg`
+                      }}
+                    >
+
+                      <div className="daily-goal-circle-inner">
+
+                        <strong>
+                          {completadasObjetivoHoy}/{OBJETIVO_DIARIO}
+                        </strong>
+
+                        <span>
+                          Hoy
+                        </span>
+
+                      </div>
+
+                    </div>
+
+                    <div className="daily-goal-info">
+
+                      <span className="daily-goal-kicker">
+                        Objetivo diario
+                      </span>
+
+                      <h2>
+                        {tareasFaltantesObjetivo === 0
+                          ? '¡Objetivo completado! 🏔️'
+                          : `Te ${
+                              tareasFaltantesObjetivo === 1
+                                ? 'falta'
+                                : 'faltan'
+                            } ${tareasFaltantesObjetivo} ${
+                              tareasFaltantesObjetivo === 1
+                                ? 'tarea'
+                                : 'tareas'
+                            }`}
+                      </h2>
+
+                      <p>
+                        Completa {OBJETIVO_DIARIO} tareas al día
+                        para mantener tu racha.
+                      </p>
+
+                      <div className="daily-goal-bar">
+                        <div
+                          className="daily-goal-bar-fill"
+                          style={{
+                            width:
+                              `${porcentajeObjetivoHoy}%`
+                          }}
+                        />
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                  <div className="daily-goal-stats">
+
+                    <div className="daily-goal-stat">
+                      <span>
+                        🔥
+                      </span>
+
+                      <div>
+                        <strong>
+                          {rachaActual}
+                        </strong>
+
+                        <small>
+                          Racha actual
+                        </small>
+                      </div>
+                    </div>
+
+                    <div className="daily-goal-stat">
+                      <span>
+                        🏆
+                      </span>
+
+                      <div>
+                        <strong>
+                          {mejorRacha}
+                        </strong>
+
+                        <small>
+                          Mejor racha
+                        </small>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  <div className="daily-goal-week">
+
+                    {diasSemanaObjetivo.map(
+                      (dia) => (
+
+                        <div
+                          className={`daily-goal-day ${
+                            dia.cumplido
+                              ? 'completed'
+                              : ''
+                          } ${
+                            dia.esHoy
+                              ? 'today'
+                              : ''
+                          } ${
+                            dia.esFuturo
+                              ? 'future'
+                              : ''
+                          }`}
+                          key={dia.clave}
+                          title={`${dia.cantidad} tareas completadas`}
+                        >
+
+                          <span>
+                            {dia.letra}
+                          </span>
+
+                          <strong>
+                            {dia.cumplido
+                              ? '✓'
+                              : dia.esHoy
+                                ? dia.cantidad
+                                : '·'}
+                          </strong>
+
+                        </div>
+
+                      )
+                    )}
+
+                  </div>
+
+                </section>
 
                 <h2 className="dashboard-section-title">
                   Resumen
@@ -2248,11 +3014,7 @@ const vaciarPapelera = async () => {
 
               ) : (
 
-                ordenarTareas(
-                  aplicarFiltro(
-                    filtrarTareas(tareas)
-                  )
-                ).map((item) => (
+                tareasPendientesPaginadas.map((item) => (
 
                   <div
                     className={`task-card task-priority-${item.prioridad}`}
@@ -2383,6 +3145,13 @@ const vaciarPapelera = async () => {
                 ))
 
               )}
+
+              {tareasPendientesFiltradas.length > 0 &&
+                renderPaginacion(
+                  paginaPendientes,
+                  totalPaginasPendientes,
+                  setPaginaPendientes
+                )}
 
             </section>
 
@@ -2548,27 +3317,7 @@ const vaciarPapelera = async () => {
 
               ) : (
 
-                tareasRealizadas
-                  .filter((item) => {
-                    const textoBusqueda =
-                      busquedaRealizadas
-                        .trim()
-                        .toLowerCase()
-
-                    if (textoBusqueda === '') {
-                      return true
-                    }
-
-                    return (
-                      (item.nombre || '')
-                        .toLowerCase()
-                        .includes(textoBusqueda) ||
-                      (item.descripcion || '')
-                        .toLowerCase()
-                        .includes(textoBusqueda)
-                    )
-                  })
-                  .map((item) => (
+                tareasRealizadasPaginadas.map((item) => (
 
                     <div
                       className="completed-history-row"
@@ -2635,25 +3384,7 @@ const vaciarPapelera = async () => {
               )}
 
               {tareasRealizadas.length > 0 &&
-              tareasRealizadas.filter((item) => {
-                const textoBusqueda =
-                  busquedaRealizadas
-                    .trim()
-                    .toLowerCase()
-
-                if (textoBusqueda === '') {
-                  return true
-                }
-
-                return (
-                  (item.nombre || '')
-                    .toLowerCase()
-                    .includes(textoBusqueda) ||
-                  (item.descripcion || '')
-                    .toLowerCase()
-                    .includes(textoBusqueda)
-                )
-              }).length === 0 && (
+              tareasRealizadasFiltradas.length === 0 && (
 
                 <div className="completed-no-results">
                   <span>🔎</span>
@@ -2664,6 +3395,13 @@ const vaciarPapelera = async () => {
                 </div>
 
               )}
+
+              {tareasRealizadasFiltradas.length > 0 &&
+                renderPaginacion(
+                  paginaRealizadas,
+                  totalPaginasRealizadas,
+                  setPaginaRealizadas
+                )}
 
             </div>
 
@@ -2720,7 +3458,7 @@ const vaciarPapelera = async () => {
 
             ) : (
 
-              tareasEliminadas.map(
+              tareasPapeleraPaginadas.map(
                 (item) => (
 
                   <div
@@ -2827,11 +3565,92 @@ const vaciarPapelera = async () => {
 
             )}
 
+            {tareasEliminadas.length > 0 &&
+              renderPaginacion(
+                paginaPapelera,
+                totalPaginasPapelera,
+                setPaginaPapelera
+              )}
+
           </section>
 
         )}
 
       </main>
+
+      {/* =========================
+          CONFIRMAR CIERRE DE SESIÓN
+      ========================= */}
+
+      {confirmarCerrarSesion && (
+
+        <div
+          className="modal-overlay logout-confirm-overlay"
+          onClick={() =>
+            setConfirmarCerrarSesion(false)
+          }
+        >
+
+          <div
+            className="logout-confirm-modal"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
+
+            <div className="logout-confirm-icon">
+              ↪
+            </div>
+
+            <h3>
+              ¿Cerrar sesión?
+            </h3>
+
+            <p>
+              Tendrás que volver a iniciar sesión
+              para continuar usando Cumbre.
+            </p>
+
+            <div className="logout-confirm-actions">
+
+              <button
+                className="logout-cancel-button"
+                onClick={() =>
+                  setConfirmarCerrarSesion(false)
+                }
+              >
+                Cancelar
+              </button>
+
+              <button
+                className="logout-confirm-button"
+                onClick={async () => {
+                  const { error } =
+                    await supabase.auth.signOut()
+
+                  if (error) {
+                    console.error(
+                      'Error al cerrar sesión:',
+                      error.message
+                    )
+                    return
+                  }
+
+                  setConfirmarCerrarSesion(false)
+                  setMenuAbierto(false)
+                  setUsuario(null)
+                }}
+              >
+                Sí, cerrar sesión
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      )}
 
       {/* =========================
           MODAL DETALLE TAREA PENDIENTE
