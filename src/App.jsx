@@ -159,6 +159,8 @@ useEffect(() => {
   ] = useState(false)
 
   const [confirmarCerrarSesion, setConfirmarCerrarSesion] = useState(false)
+  const [mostrarAvisoNotificaciones, setMostrarAvisoNotificaciones] = useState(false)
+  const [activandoNotificaciones, setActivandoNotificaciones] = useState(false)
 
   const [, setFechaActual] = useState('')
 
@@ -1515,6 +1517,169 @@ const vaciarPapelera = async () => {
     ]
   }
 
+  /* =========================
+     NOTIFICACIONES PUSH
+  ========================= */
+
+  const convertirClaveVapid = (claveBase64) => {
+    const relleno = '='.repeat((4 - (claveBase64.length % 4)) % 4)
+    const base64 = (claveBase64 + relleno)
+      .replace(/-/g, '+')
+      .replace(/_/g, '/')
+    const datosCrudos = window.atob(base64)
+    const salida = new Uint8Array(datosCrudos.length)
+
+    for (let i = 0; i < datosCrudos.length; i += 1) {
+      salida[i] = datosCrudos.charCodeAt(i)
+    }
+
+    return salida
+  }
+
+  const guardarSuscripcionPush = async (suscripcion) => {
+    if (!usuario) throw new Error('No hay un usuario conectado.')
+
+    const datos = suscripcion.toJSON()
+    const endpoint = datos.endpoint
+    const p256dh = datos.keys?.p256dh
+    const auth = datos.keys?.auth
+
+    if (!endpoint || !p256dh || !auth) {
+      throw new Error('La suscripción Push está incompleta.')
+    }
+
+    const { data: existente, error: errorBusqueda } = await supabase
+      .from('push_subscriptions')
+      .select('id')
+      .eq('endpoint', endpoint)
+      .maybeSingle()
+
+    if (errorBusqueda) throw errorBusqueda
+
+    if (existente) {
+      const { error } = await supabase
+        .from('push_subscriptions')
+        .update({ user_id: usuario.id, p256dh, auth })
+        .eq('id', existente.id)
+
+      if (error) throw error
+      return
+    }
+
+    const { error } = await supabase
+      .from('push_subscriptions')
+      .insert([{ user_id: usuario.id, endpoint, p256dh, auth }])
+
+    if (error) throw error
+  }
+
+  const registrarSuscripcionPush = async () => {
+    if (!('serviceWorker' in navigator)) {
+      throw new Error('El navegador no admite Service Worker.')
+    }
+
+    const clavePublica = import.meta.env.VITE_VAPID_PUBLIC_KEY
+
+    if (!clavePublica) {
+      throw new Error('Falta VITE_VAPID_PUBLIC_KEY en las variables de entorno.')
+    }
+
+    const registro = await navigator.serviceWorker.ready
+    let suscripcion = await registro.pushManager.getSubscription()
+
+    if (!suscripcion) {
+      suscripcion = await registro.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: convertirClaveVapid(clavePublica)
+      })
+    }
+
+    await guardarSuscripcionPush(suscripcion)
+    return registro
+  }
+
+  const activarNotificaciones = async () => {
+    if (activandoNotificaciones) return
+
+    try {
+      setActivandoNotificaciones(true)
+
+      if (!('Notification' in window)) {
+        mostrarMensaje('⚠ Este dispositivo no admite notificaciones.', 'error')
+        return
+      }
+
+      const permiso = await Notification.requestPermission()
+
+      if (permiso !== 'granted') {
+        setMostrarAvisoNotificaciones(false)
+        mostrarMensaje('⚠ Las notificaciones no fueron autorizadas.', 'error')
+        return
+      }
+
+      const registro = await registrarSuscripcionPush()
+
+      localStorage.removeItem('cumbre-notificaciones-pospuestas')
+      setMostrarAvisoNotificaciones(false)
+
+      await registro.showNotification('Cumbre 🏔️', {
+        body: '¡Listo! Recibirás recordatorios de tus tareas y tu racha.',
+        icon: '/pwa-192x192.png',
+        badge: '/pwa-192x192.png'
+      })
+
+      mostrarMensaje('✓ Notificaciones activadas correctamente')
+    } catch (error) {
+      console.error('Error al activar notificaciones:', error)
+      mostrarMensaje('⚠ No se pudieron activar las notificaciones.', 'error')
+    } finally {
+      setActivandoNotificaciones(false)
+    }
+  }
+
+  const posponerNotificaciones = () => {
+    localStorage.setItem('cumbre-notificaciones-pospuestas', String(Date.now()))
+    setMostrarAvisoNotificaciones(false)
+  }
+
+  useEffect(() => {
+    if (!usuario || cargandoSesion) return
+
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) return
+
+    let timer
+
+    const prepararNotificaciones = async () => {
+      if (Notification.permission === 'granted') {
+        try {
+          await registrarSuscripcionPush()
+        } catch (error) {
+          console.error('Error al registrar suscripción Push existente:', error)
+        }
+        return
+      }
+
+      if (Notification.permission === 'denied') return
+
+      const ultimaPosposicion = Number(
+        localStorage.getItem('cumbre-notificaciones-pospuestas') || 0
+      )
+      const sieteDias = 7 * 24 * 60 * 60 * 1000
+
+      if (ultimaPosposicion && Date.now() - ultimaPosposicion < sieteDias) return
+
+      timer = setTimeout(() => {
+        setMostrarAvisoNotificaciones(true)
+      }, 700)
+    }
+
+    prepararNotificaciones()
+
+    return () => {
+      if (timer) clearTimeout(timer)
+    }
+  }, [usuario, cargandoSesion])
+
   const renderPaginacion = (
     paginaActual,
     totalPaginas,
@@ -1656,38 +1821,6 @@ const vaciarPapelera = async () => {
     />
   )
 }
-const activarNotificaciones = async () => {
-  try {
-    if (!('Notification' in window)) {
-      alert('Este dispositivo no admite notificaciones.')
-      return
-    }
-
-    if (!('serviceWorker' in navigator)) {
-      alert('El navegador no admite Service Worker.')
-      return
-    }
-
-    const permiso = await Notification.requestPermission()
-
-    if (permiso !== 'granted') {
-      alert('Debes permitir las notificaciones para recibir recordatorios.')
-      return
-    }
-
-    const registro = await navigator.serviceWorker.ready
-
-    await registro.showNotification('Cumbre 🏔️', {
-      body: '¡Las notificaciones están funcionando correctamente!',
-      icon: '/pwa-192x192.png',
-      badge: '/pwa-192x192.png',
-    })
-  } catch (error) {
-    console.error('Error al activar notificaciones:', error)
-    alert('No se pudo mostrar la notificación.')
-  }
-}
-
   return (
   <div
     className="app"
@@ -2087,13 +2220,6 @@ const activarNotificaciones = async () => {
   >
     + Nueva tarea
   </button>
-  
-  <button
-  className="dashboard-primary"
-  onClick={activarNotificaciones}
->
-  🔔 Activar notificaciones
-</button>
 
 </div>
 
@@ -4529,6 +4655,64 @@ const activarNotificaciones = async () => {
 
         </div>
 
+      )}
+
+      {/* =========================
+          AVISO DE NOTIFICACIONES
+      ========================= */}
+
+      {mostrarAvisoNotificaciones && (
+        <div
+          className="notification-prompt-overlay"
+          onClick={posponerNotificaciones}
+        >
+          <div
+            className="notification-prompt-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="notification-prompt-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="notification-prompt-icon">🔔</div>
+
+            <div className="notification-prompt-copy">
+              <span className="notification-prompt-kicker">
+                Recordatorios de Cumbre
+              </span>
+
+              <h2 id="notification-prompt-title">
+                Activa tus notificaciones
+              </h2>
+
+              <p>
+                Cumbre puede avisarte cuando una tarea esté próxima a vencer
+                y recordarte tu objetivo diario para que no pierdas tu racha.
+              </p>
+            </div>
+
+            <div className="notification-prompt-actions">
+              <button
+                type="button"
+                className="notification-prompt-later"
+                onClick={posponerNotificaciones}
+                disabled={activandoNotificaciones}
+              >
+                Ahora no
+              </button>
+
+              <button
+                type="button"
+                className="notification-prompt-activate"
+                onClick={activarNotificaciones}
+                disabled={activandoNotificaciones}
+              >
+                {activandoNotificaciones
+                  ? 'Activando...'
+                  : '🔔 Activar notificaciones'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>
