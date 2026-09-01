@@ -27,6 +27,7 @@ function App() {
 
   const [busqueda, setBusqueda] = useState('')
   const [filtro, setFiltro] = useState('todas')
+  const [busquedaRealizadas, setBusquedaRealizadas] = useState('')
 
   const [menuTareaAbierto, setMenuTareaAbierto] = useState(null)
 
@@ -2394,117 +2395,277 @@ const vaciarPapelera = async () => {
 
         {seccion === 'realizadas' && (
 
-          <section className="task-list">
+          <section className="completed-page">
 
-            <div className="completed-header">
+            <div className="completed-hero">
 
-              <div className="completed-header-icon">
-                🎉
+              <div className="completed-hero-content">
+
+                <div className="completed-hero-icon">
+                  ✓
+                </div>
+
+                <div className="completed-hero-text">
+
+                  <span className="completed-hero-kicker">
+                    Tus logros
+                  </span>
+
+                  <h2>
+                    ¡Excelente trabajo, {usuario?.user_metadata?.nombre || 'Usuario'}! 🎉
+                  </h2>
+
+                  <p>
+                    Cada tarea completada es un paso más
+                    hacia tu Cumbre.
+                  </p>
+
+                  <div className="completed-hero-stats">
+
+                    <div className="completed-stat">
+                      <strong>{tareasRealizadas.length}</strong>
+                      <span>
+                        {tareasRealizadas.length === 1
+                          ? 'tarea completada'
+                          : 'tareas completadas'}
+                      </span>
+                    </div>
+
+                    <div className="completed-stat completed-stat-today">
+                      <strong>{tareasCompletadasHoy}</strong>
+                      <span>
+                        {tareasCompletadasHoy === 1
+                          ? 'completada hoy'
+                          : 'completadas hoy'}
+                      </span>
+                    </div>
+
+                  </div>
+
+                </div>
+
               </div>
 
-              <div className="completed-header-info">
+              <div className="completed-hero-mountain">
 
-                <h2>
-                  Buen trabajo 🔥
-                </h2>
+                <svg viewBox="0 0 190 110" aria-hidden="true">
+                  <circle
+                    cx="42"
+                    cy="30"
+                    r="17"
+                    className="completed-sun"
+                  />
 
-                <p>
-                  Has completado{' '}
-                  <strong>
-                    {tareasRealizadas.length}
-                  </strong>{' '}
-                  {tareasRealizadas.length === 1
-                    ? 'tarea en total'
-                    : 'tareas en total'}
-                </p>
+                  <path
+                    className="completed-mountain-back"
+                    d="M0 100 L45 58 L72 78 L98 46 L160 100 Z"
+                  />
 
-                <span className="completed-today">
-                  ✓ {tareasCompletadasHoy}{' '}
-                  {tareasCompletadasHoy === 1
-                    ? 'completada hoy'
-                    : 'completadas hoy'}
-                </span>
+                  <path
+                    className="completed-mountain-front"
+                    d="M42 100 L116 18 L190 100 Z"
+                  />
+
+                  <path
+                    className="completed-mountain-snow"
+                    d="M116 18 L98 42 L110 38 L118 49 L131 35 Z"
+                  />
+                </svg>
 
               </div>
 
             </div>
 
-            <h2 className="completed-list-title">
-              Historial
-            </h2>
+            <div className="completed-history">
 
-            {tareasRealizadas.length === 0 ? (
+              <div className="completed-history-header">
 
-              <p className="empty-message">
-                Aún no tienes tareas realizadas.
-              </p>
+                <div>
+                  <span className="completed-history-kicker">
+                    Historial
+                  </span>
 
-            ) : (
+                  <h2>
+                    Tareas completadas
+                  </h2>
+                </div>
 
-              tareasRealizadas.map(
-                (item) => (
+                <div className="completed-search">
 
-                  <div
-                    className="task-card task-completed task-completed-clickable"
-                    key={item.id}
-                    onClick={() =>
-                      setTareaRealizadaSeleccionada(item)
-                    }
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
                   >
+                    <circle cx="11" cy="11" r="8" />
+                    <line
+                      x1="21"
+                      y1="21"
+                      x2="16.65"
+                      y2="16.65"
+                    />
+                  </svg>
 
-                    <div className="task-info">
+                  <input
+                    type="text"
+                    placeholder="Buscar en historial..."
+                    value={busquedaRealizadas}
+                    onChange={(e) =>
+                      setBusquedaRealizadas(
+                        e.target.value
+                      )
+                    }
+                  />
 
-                      <span className="task-name">
-                        {item.nombre}
-                      </span>
+                </div>
 
-                      <span
-                        className={`prioridad prioridad-${item.prioridad}`}
-                      >
-                        {obtenerNombrePrioridad(
-                          item.prioridad
-                        )}
-                      </span>
+              </div>
 
-                      {item.fechaLimite && (
+              {tareasRealizadas.length === 0 ? (
 
-                        <span className="fecha-limite">
-                          📅{' '}
-                          {formatearFecha(
-                            item.fechaLimite
+                <div className="completed-empty">
+
+                  <span>🏔️</span>
+
+                  <div>
+                    <strong>
+                      Aún no tienes logros registrados
+                    </strong>
+
+                    <p>
+                      Completa tu primera tarea y
+                      comienza a construir tu historial.
+                    </p>
+                  </div>
+
+                </div>
+
+              ) : (
+
+                tareasRealizadas
+                  .filter((item) => {
+                    const textoBusqueda =
+                      busquedaRealizadas
+                        .trim()
+                        .toLowerCase()
+
+                    if (textoBusqueda === '') {
+                      return true
+                    }
+
+                    return (
+                      (item.nombre || '')
+                        .toLowerCase()
+                        .includes(textoBusqueda) ||
+                      (item.descripcion || '')
+                        .toLowerCase()
+                        .includes(textoBusqueda)
+                    )
+                  })
+                  .map((item) => (
+
+                    <div
+                      className="completed-history-row"
+                      key={item.id}
+                      onClick={() =>
+                        setTareaRealizadaSeleccionada(item)
+                      }
+                    >
+
+                      <div className="completed-check">
+                        ✓
+                      </div>
+
+                      <div className="completed-task-main">
+
+                        <strong>
+                          {item.nombre}
+                        </strong>
+
+                        <div className="completed-task-meta">
+
+                          <span
+                            className={`completed-priority completed-priority-${item.prioridad}`}
+                          >
+                            {obtenerNombrePrioridad(
+                              item.prioridad
+                            )}
+                          </span>
+
+                          {item.fechaLimite && (
+                            <span className="completed-task-date">
+                              📅{' '}
+                              {formatearFecha(
+                                item.fechaLimite
+                              )}
+                            </span>
                           )}
-                        </span>
 
-                      )}
+                        </div>
 
-                      {item.fechaCompletada && (
+                      </div>
 
-                        <span className="completed-date">
+                      <div className="completed-task-status">
+
+                        <span className="completed-status-badge">
                           ✓{' '}
-                          {obtenerTextoFechaCompletada(
-                            item.fechaCompletada
-                          )}
+                          {item.fechaCompletada
+                            ? obtenerTextoFechaCompletada(
+                                item.fechaCompletada
+                              )
+                            : 'Completada'}
                         </span>
 
-                      )}
+                        <span className="completed-open-arrow">
+                          →
+                        </span>
+
+                      </div>
 
                     </div>
 
-                    <span
-                      className="completed-label completed-label-static"
-                      onClick={(e) =>
-                        e.stopPropagation()
-                      }
-                    >
-                      Completado
-                    </span>
+                  ))
 
-                  </div>
+              )}
 
+              {tareasRealizadas.length > 0 &&
+              tareasRealizadas.filter((item) => {
+                const textoBusqueda =
+                  busquedaRealizadas
+                    .trim()
+                    .toLowerCase()
+
+                if (textoBusqueda === '') {
+                  return true
+                }
+
+                return (
+                  (item.nombre || '')
+                    .toLowerCase()
+                    .includes(textoBusqueda) ||
+                  (item.descripcion || '')
+                    .toLowerCase()
+                    .includes(textoBusqueda)
                 )
-              )
+              }).length === 0 && (
 
-            )}
+                <div className="completed-no-results">
+                  <span>🔎</span>
+                  <p>
+                    No encontramos tareas que coincidan
+                    con tu búsqueda.
+                  </p>
+                </div>
+
+              )}
+
+            </div>
 
           </section>
 
