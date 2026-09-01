@@ -72,17 +72,11 @@ useEffect(() => {
     setTareasEliminadas([])
     return
   }
-  console.log('UID USUARIO ACTUAL:', usuario.id)
-
   const cargarTareas = async () => {
     const { data, error } = await supabase
       .from('Tareas')
       .select('*')
       .order('created_at', { ascending: false })
-
-      console.log('TAREAS RECIBIDAS:', data)
-      console.log('ERROR SUPABASE:', error)
-      console.log('UID CONSULTANDO:', usuario.id)
 
     if (error) {
       console.error(
@@ -282,10 +276,6 @@ const agregarTarea = async () => {
      COMPLETAR TAREA
   ========================= */
 
- /* =========================
-   COMPLETAR TAREA
-========================= */
-
 const completarTarea = async (id) => {
   const tareaCompletada = tareas.find(
     (item) => item.id === id
@@ -331,11 +321,6 @@ const completarTarea = async (id) => {
   if (usuario?.email) {
   try {
 
-    console.log(
-      'CORREO AL QUE CUMBRE INTENTA ENVIAR:',
-      usuario.email
-    )
-
     const { error: errorCorreo } =
       await supabase.functions.invoke(
         'enviar-correo-tarea',
@@ -352,10 +337,6 @@ const completarTarea = async (id) => {
       console.error(
         'Error al enviar correo:',
         errorCorreo
-      )
-    } else {
-      console.log(
-        'Correo enviado correctamente'
       )
     }
 
@@ -1015,12 +996,6 @@ const vaciarPapelera = async () => {
   }, [])
 
   /* =========================
-     LOCAL STORAGE
-  ========================= */
-
- 
-
-  /* =========================
      DATOS DASHBOARD
   ========================= */
 
@@ -1634,8 +1609,36 @@ const vaciarPapelera = async () => {
   }
 
     if (cargandoSesion) {
-  return null
-}
+      return (
+        <div className="cumbre-loading-screen">
+          <div className="cumbre-loading-content">
+            <div className="cumbre-loading-logo" aria-hidden="true">
+              <svg viewBox="0 0 64 48">
+                <path
+                  className="cumbre-loading-mountain-back"
+                  d="M2 43 L22 15 L34 31 L42 21 L62 43 Z"
+                />
+                <path
+                  className="cumbre-loading-mountain-front"
+                  d="M14 43 L38 7 L62 43 Z"
+                />
+                <path
+                  className="cumbre-loading-snow"
+                  d="M38 7 L29 21 L36 18 L40 24 L45 18 Z"
+                />
+              </svg>
+            </div>
+
+            <strong>Cumbre</strong>
+            <span>Preparando tu espacio...</span>
+
+            <div className="cumbre-loading-bar" aria-label="Cargando">
+              <div className="cumbre-loading-bar-fill" />
+            </div>
+          </div>
+        </div>
+      )
+    }
 
     if (!usuario) {
   return (
@@ -3008,9 +3011,50 @@ const vaciarPapelera = async () => {
 
               {tareas.length === 0 ? (
 
-                <p className="empty-message">
-                  No tienes tareas pendientes.
-                </p>
+                <div className="cumbre-empty-state">
+                  <div className="cumbre-empty-icon">🏔️</div>
+
+                  <strong>
+                    Tu lista está despejada
+                  </strong>
+
+                  <p>
+                    No tienes tareas pendientes.
+                    Crea una nueva tarea cuando quieras
+                    seguir avanzando hacia tu Cumbre.
+                  </p>
+
+                  <button
+                    onClick={irACrearTarea}
+                  >
+                    + Nueva tarea
+                  </button>
+                </div>
+
+              ) : tareasPendientesFiltradas.length === 0 ? (
+
+                <div className="cumbre-empty-state cumbre-no-results">
+                  <div className="cumbre-empty-icon">⌕</div>
+
+                  <strong>
+                    No encontramos resultados
+                  </strong>
+
+                  <p>
+                    No hay tareas que coincidan con
+                    tu búsqueda o con el filtro
+                    seleccionado.
+                  </p>
+
+                  <button
+                    onClick={() => {
+                      setBusqueda('')
+                      setFiltro('todas')
+                    }}
+                  >
+                    Limpiar filtros
+                  </button>
+                </div>
 
               ) : (
 
@@ -3298,21 +3342,26 @@ const vaciarPapelera = async () => {
 
               {tareasRealizadas.length === 0 ? (
 
-                <div className="completed-empty">
+                <div className="cumbre-empty-state completed-empty-state">
+                  <div className="cumbre-empty-icon">✓</div>
 
-                  <span>🏔️</span>
+                  <strong>
+                    Tu historial comienza aquí
+                  </strong>
 
-                  <div>
-                    <strong>
-                      Aún no tienes logros registrados
-                    </strong>
+                  <p>
+                    Cuando completes una tarea,
+                    aparecerá en esta sección y
+                    comenzará a sumar a tu progreso.
+                  </p>
 
-                    <p>
-                      Completa tu primera tarea y
-                      comienza a construir tu historial.
-                    </p>
-                  </div>
-
+                  <button
+                    onClick={() =>
+                      setSeccion('pendientes')
+                    }
+                  >
+                    Ver mis tareas
+                  </button>
                 </div>
 
               ) : (
@@ -3386,12 +3435,25 @@ const vaciarPapelera = async () => {
               {tareasRealizadas.length > 0 &&
               tareasRealizadasFiltradas.length === 0 && (
 
-                <div className="completed-no-results">
-                  <span>🔎</span>
+                <div className="cumbre-empty-state cumbre-no-results completed-no-results">
+                  <div className="cumbre-empty-icon">⌕</div>
+
+                  <strong>
+                    Sin coincidencias
+                  </strong>
+
                   <p>
-                    No encontramos tareas que coincidan
-                    con tu búsqueda.
+                    No encontramos tareas completadas
+                    que coincidan con tu búsqueda.
                   </p>
+
+                  <button
+                    onClick={() =>
+                      setBusquedaRealizadas('')
+                    }
+                  >
+                    Limpiar búsqueda
+                  </button>
                 </div>
 
               )}
@@ -3452,9 +3514,19 @@ const vaciarPapelera = async () => {
 
             {tareasEliminadas.length === 0 ? (
 
-              <p className="empty-message">
-                No tienes tareas eliminadas.
-              </p>
+              <div className="cumbre-empty-state trash-empty-state">
+                <div className="cumbre-empty-icon">♲</div>
+
+                <strong>
+                  La papelera está vacía
+                </strong>
+
+                <p>
+                  No tienes tareas eliminadas.
+                  Cuando envíes una tarea a la papelera,
+                  podrás restaurarla desde aquí.
+                </p>
+              </div>
 
             ) : (
 
