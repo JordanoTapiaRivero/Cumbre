@@ -5,8 +5,14 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   plugins: [
     react(),
+
     VitePWA({
       registerType: 'autoUpdate',
+
+      // Service Worker personalizado para las notificaciones Push
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
 
       includeAssets: ['favicon.svg'],
 

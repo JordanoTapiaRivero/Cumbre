@@ -1680,6 +1680,26 @@ const vaciarPapelera = async () => {
     }
   }, [usuario, cargandoSesion])
 
+  const enviarPushPrueba = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        'enviar-push'
+      )
+
+      if (error) {
+        console.error('Error al enviar Push:', error)
+        mostrarMensaje('⚠ No se pudo enviar la notificación de prueba.', 'error')
+        return
+      }
+
+      console.log('Respuesta Push:', data)
+      mostrarMensaje('✓ Notificación Push enviada')
+    } catch (error) {
+      console.error('Error inesperado al enviar Push:', error)
+      mostrarMensaje('⚠ Ocurrió un error al enviar la notificación.', 'error')
+    }
+  }
+
   const renderPaginacion = (
     paginaActual,
     totalPaginas,
@@ -2219,6 +2239,13 @@ const vaciarPapelera = async () => {
     onClick={irACrearTarea}
   >
     + Nueva tarea
+  </button>
+
+  <button
+    className="dashboard-primary"
+    onClick={enviarPushPrueba}
+  >
+    🔔 Enviar notificación de prueba
   </button>
 
 </div>
