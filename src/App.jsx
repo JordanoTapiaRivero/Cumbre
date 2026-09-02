@@ -9,6 +9,7 @@ function App() {
   const [cargandoSesion, setCargandoSesion] = useState(true)
   const formularioRef = useRef(null)
   const temporizadorInactividadRef = useRef(null)
+  const ultimaSincronizacionActividadRef = useRef(0)
   const [splashActivo, setSplashActivo] = useState(true)
 
   const [tarea, setTarea] = useState('')
@@ -77,11 +78,11 @@ function App() {
 }, [])
 
   /* =========================
-     CIERRE AUTOMÁTICO POR INACTIVIDAD
+     CIERRE AUTOMÁTICO + ACTIVIDAD
   ========================= */
 
   useEffect(() => {
-    if (!usuario) {
+    if (!usuario || cargandoSesion) {
       if (temporizadorInactividadRef.current) {
         clearTimeout(temporizadorInactividadRef.current)
         temporizadorInactividadRef.current = null
@@ -91,7 +92,67 @@ function App() {
     }
 
     const TIEMPO_INACTIVIDAD = 5 * 60 * 1000
+    const INTERVALO_SINCRONIZACION = 30 * 1000
     let cerrandoSesion = false
+
+    const guardarActividadEnSupabase = async (forzar = false) => {
+      const ahora = Date.now()
+
+      if (
+        !forzar &&
+        ahora - ultimaSincronizacionActividadRef.current <
+          INTERVALO_SINCRONIZACION
+      ) {
+        return
+      }
+
+      ultimaSincronizacionActividadRef.current = ahora
+
+      const { error } = await supabase
+        .from('user_activity')
+        .upsert(
+          {
+            user_id: usuario.id,
+            last_activity: new Date(ahora).toISOString(),
+            session_expired: false,
+            expiration_notified: false,
+          },
+          { onConflict: 'user_id' }
+        )
+
+      if (error) {
+        console.error(
+          'Error al registrar la actividad del usuario:',
+          error.message
+        )
+      }
+    }
+
+    const comprobarSesionExpirada = async () => {
+      const { data, error } = await supabase
+        .from('user_activity')
+        .select('session_expired')
+        .eq('user_id', usuario.id)
+        .maybeSingle()
+
+      if (error) {
+        console.error(
+          'Error al comprobar la sesión:',
+          error.message
+        )
+        return false
+      }
+
+      if (data?.session_expired) {
+        await supabase.auth.signOut()
+        setConfirmarCerrarSesion(false)
+        setMenuAbierto(false)
+        setUsuario(null)
+        return true
+      }
+
+      return false
+    }
 
     const cerrarSesionPorInactividad = async () => {
       if (cerrandoSesion) return
@@ -127,6 +188,14 @@ function App() {
           }
         }
 
+        await supabase
+          .from('user_activity')
+          .update({
+            session_expired: true,
+            expiration_notified: true,
+          })
+          .eq('user_id', usuario.id)
+
         const { error } = await supabase.auth.signOut()
 
         if (error) {
@@ -160,13 +229,29 @@ function App() {
     }
 
     const registrarActividad = () => {
+      if (document.hidden || cerrandoSesion) return
+
       reiniciarTemporizador()
+      guardarActividadEnSupabase()
     }
 
-    const manejarVisibilidad = () => {
-      if (document.visibilityState === 'visible') {
-        reiniciarTemporizador()
-      }
+    const manejarVisibilidad = async () => {
+      if (document.visibilityState !== 'visible') return
+
+      const expirada = await comprobarSesionExpirada()
+
+      if (expirada) return
+
+      registrarActividad()
+    }
+
+    const prepararControlSesion = async () => {
+      const expirada = await comprobarSesionExpirada()
+
+      if (expirada) return
+
+      await guardarActividadEnSupabase(true)
+      reiniciarTemporizador()
     }
 
     const eventosActividad = [
@@ -191,7 +276,7 @@ function App() {
       manejarVisibilidad
     )
 
-    reiniciarTemporizador()
+    prepararControlSesion()
 
     return () => {
       if (temporizadorInactividadRef.current) {
@@ -211,7 +296,7 @@ function App() {
         manejarVisibilidad
       )
     }
-  }, [usuario])
+  }, [usuario, cargandoSesion])
 
 useEffect(() => {
   if (!usuario) {
@@ -1819,26 +1904,6 @@ const vaciarPapelera = async () => {
     }
   }, [usuario, cargandoSesion])
 
-  const enviarPushPrueba = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke(
-        'enviar-push'
-      )
-
-      if (error) {
-        console.error('Error al enviar Push:', error)
-        mostrarMensaje('⚠ No se pudo enviar la notificación de prueba.', 'error')
-        return
-      }
-
-      console.log('Respuesta Push:', data)
-      mostrarMensaje('✓ Notificación Push enviada')
-    } catch (error) {
-      console.error('Error inesperado al enviar Push:', error)
-      mostrarMensaje('⚠ Ocurrió un error al enviar la notificación.', 'error')
-    }
-  }
-
   const renderPaginacion = (
     paginaActual,
     totalPaginas,
@@ -2378,13 +2443,6 @@ const vaciarPapelera = async () => {
     onClick={irACrearTarea}
   >
     + Nueva tarea
-  </button>
-
-  <button
-    className="dashboard-primary"
-    onClick={enviarPushPrueba}
-  >
-    🔔 Enviar notificación de prueba
   </button>
 
 </div>

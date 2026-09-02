@@ -13,43 +13,78 @@ function Login({ onLogin }) {
   const [error, setError] = useState('')
 
   useEffect(() => {
-  const manejarAtras = () => {
-    setModoRegistro(false)
-    setError('')
-    setNombre('')
-    setEmail('')
-    setPassword('')
-    setConfirmarPassword('')
-  }
+    const manejarAtras = () => {
+      setModoRegistro(false)
+      setError('')
+      setNombre('')
+      setEmail('')
+      setPassword('')
+      setConfirmarPassword('')
+    }
 
-  window.addEventListener('popstate', manejarAtras)
+    window.addEventListener('popstate', manejarAtras)
 
-  return () => {
-    window.removeEventListener('popstate', manejarAtras)
-  }
-}, [])
+    return () => {
+      window.removeEventListener('popstate', manejarAtras)
+    }
+  }, [])
 
   const manejarLogin = async (e) => {
-  e.preventDefault()
-  setError('')
+    e.preventDefault()
+    setError('')
 
-  if (!email.trim() || !password.trim()) {
-    setError('Debes completar todos los campos.')
-    return
+    if (!email.trim() || !password.trim()) {
+      setError('Debes completar todos los campos.')
+      return
+    }
+
+    const { data, error } =
+      await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password
+      })
+
+    if (error) {
+      setError('Correo o contraseña incorrectos.')
+      return
+    }
+
+    /* =========================
+       REACTIVAR SESIÓN
+    ========================= */
+
+    const { error: errorActividad } =
+      await supabase
+        .from('user_activity')
+        .upsert(
+          {
+            user_id: data.user.id,
+            last_activity: new Date().toISOString(),
+            session_expired: false,
+            expiration_notified: false
+          },
+          {
+            onConflict: 'user_id'
+          }
+        )
+
+    if (errorActividad) {
+      console.error(
+        'Error al reactivar la sesión:',
+        errorActividad.message
+      )
+
+      await supabase.auth.signOut()
+
+      setError(
+        'No se pudo iniciar la sesión correctamente. Intenta nuevamente.'
+      )
+
+      return
+    }
+
+    onLogin(data.user)
   }
-
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: email.trim(),
-    password
-  })
-
-  if (error) {
-    setError('Correo o contraseña incorrectos.')
-    return
-  }
-
-  onLogin(data.user)
-}
 
   const manejarRegistro = async (e) => {
     e.preventDefault()
@@ -103,181 +138,182 @@ function Login({ onLogin }) {
     }
   }
 
- const cambiarModo = () => {
-  if (!modoRegistro) {
-    window.history.pushState(
-      { registro: true },
-      '',
-      '#registro'
-    )
-    
-    setModoRegistro(true)
-  } else {
-    window.history.back()
+  const cambiarModo = () => {
+    if (!modoRegistro) {
+      window.history.pushState(
+        { registro: true },
+        '',
+        '#registro'
+      )
+
+      setModoRegistro(true)
+    } else {
+      window.history.back()
+    }
+
+    setError('')
+    setNombre('')
+    setEmail('')
+    setPassword('')
+    setConfirmarPassword('')
   }
 
-  setError('')
-  setNombre('')
-  setEmail('')
-  setPassword('')
-  setConfirmarPassword('')
-}
-
   return (
-  <div
-    className="login-page"
-    style={{
-      backgroundImage: `url(${fondo})`
-    }}
-  >
-    <div className="login-overlay"></div>
+    <div
+      className="login-page"
+      style={{
+        backgroundImage: `url(${fondo})`
+      }}
+    >
+      <div className="login-overlay"></div>
 
-    <div className="login-container">
+      <div className="login-container">
 
-      <div className="login-brand">
-        <h1>Cumbre</h1>
+        <div className="login-brand">
+          <h1>Cumbre</h1>
 
-        <div className="brand-divider"></div>
+          <div className="brand-divider"></div>
 
-        <p>Organiza · Prioriza · Avanza</p>
-      </div>
+          <p>Organiza · Prioriza · Avanza</p>
+        </div>
 
-      <form
-        className="login-card"
-        onSubmit={
-          modoRegistro
-            ? manejarRegistro
-            : manejarLogin
-        }
-      >
-        <div className="login-header">
-          <h2>
+        <form
+          className="login-card"
+          onSubmit={
+            modoRegistro
+              ? manejarRegistro
+              : manejarLogin
+          }
+        >
+          <div className="login-header">
+            <h2>
+              {modoRegistro
+                ? 'Crear cuenta'
+                : 'Iniciar sesión'}
+            </h2>
+
+            <p>
+              {modoRegistro
+                ? 'Crea tu cuenta para comenzar a organizar tus tareas.'
+                : 'Continúa organizando tus tareas.'}
+            </p>
+          </div>
+
+          {modoRegistro && (
+            <div className="login-field">
+              <label htmlFor="nombre">
+                Nombre
+              </label>
+
+              <input
+                id="nombre"
+                type="text"
+                placeholder="Tu nombre"
+                value={nombre}
+                onChange={(e) =>
+                  setNombre(e.target.value)
+                }
+                required
+              />
+            </div>
+          )}
+
+          <div className="login-field">
+            <label htmlFor="email">
+              Correo electrónico
+            </label>
+
+            <input
+              id="email"
+              type="email"
+              placeholder="correo@ejemplo.com"
+              value={email}
+              onChange={(e) =>
+                setEmail(e.target.value)
+              }
+              required
+            />
+          </div>
+
+          <div className="login-field">
+            <label htmlFor="password">
+              Contraseña
+            </label>
+
+            <input
+              id="password"
+              type="password"
+              placeholder="Ingresa tu contraseña"
+              value={password}
+              onChange={(e) =>
+                setPassword(e.target.value)
+              }
+              required
+            />
+          </div>
+
+          {modoRegistro && (
+            <div className="login-field">
+              <label htmlFor="confirmarPassword">
+                Confirmar contraseña
+              </label>
+
+              <input
+                id="confirmarPassword"
+                type="password"
+                placeholder="Repite tu contraseña"
+                value={confirmarPassword}
+                onChange={(e) =>
+                  setConfirmarPassword(
+                    e.target.value
+                  )
+                }
+                required
+              />
+            </div>
+          )}
+
+          {error && (
+            <p className="login-error">
+              {error}
+            </p>
+          )}
+
+          <button
+            className="login-button"
+            type="submit"
+          >
             {modoRegistro
               ? 'Crear cuenta'
               : 'Iniciar sesión'}
-          </h2>
-
-          <p>
-            {modoRegistro
-              ? 'Crea tu cuenta para comenzar a organizar tus tareas.'
-              : 'Continúa organizando tus tareas.'}
-          </p>
-        </div>
-
-        {modoRegistro && (
-          <div className="login-field">
-            <label htmlFor="nombre">
-              Nombre
-            </label>
-
-            <input
-              id="nombre"
-              type="text"
-              placeholder="Tu nombre"
-              value={nombre}
-              onChange={(e) =>
-                setNombre(e.target.value)
-              }
-              required
-            />
-          </div>
-        )}
-
-        <div className="login-field">
-          <label htmlFor="email">
-            Correo electrónico
-          </label>
-
-          <input
-            id="email"
-            type="email"
-            placeholder="correo@ejemplo.com"
-            value={email}
-            onChange={(e) =>
-              setEmail(e.target.value)
-            }
-            required
-          />
-        </div>
-
-        <div className="login-field">
-          <label htmlFor="password">
-            Contraseña
-          </label>
-
-          <input
-            id="password"
-            type="password"
-            placeholder="Ingresa tu contraseña"
-            value={password}
-            onChange={(e) =>
-              setPassword(e.target.value)
-            }
-            required
-          />
-        </div>
-
-        {modoRegistro && (
-          <div className="login-field">
-            <label htmlFor="confirmarPassword">
-              Confirmar contraseña
-            </label>
-
-            <input
-              id="confirmarPassword"
-              type="password"
-              placeholder="Repite tu contraseña"
-              value={confirmarPassword}
-              onChange={(e) =>
-                setConfirmarPassword(
-                  e.target.value
-                )
-              }
-              required
-            />
-          </div>
-        )}
-
-        {error && (
-          <p className="login-error">
-            {error}
-          </p>
-        )}
-
-        <button
-          className="login-button"
-          type="submit"
-        >
-          {modoRegistro
-            ? 'Crear cuenta'
-            : 'Iniciar sesión'}
-        </button>
-
-        <div className="login-register">
-          <span>
-            {modoRegistro
-              ? '¿Ya tienes una cuenta?'
-              : '¿No tienes una cuenta?'}
-          </span>
-
-          <button
-            type="button"
-            className="register-link"
-            onClick={cambiarModo}
-          >
-            {modoRegistro
-              ? 'Iniciar sesión'
-              : 'Crear cuenta'}
           </button>
-        </div>
-      </form>
 
-      <p className="login-footer">
-        Tu espacio personal para organizar tus tareas.
-      </p>
+          <div className="login-register">
+            <span>
+              {modoRegistro
+                ? '¿Ya tienes una cuenta?'
+                : '¿No tienes una cuenta?'}
+            </span>
 
+            <button
+              type="button"
+              className="register-link"
+              onClick={cambiarModo}
+            >
+              {modoRegistro
+                ? 'Iniciar sesión'
+                : 'Crear cuenta'}
+            </button>
+          </div>
+        </form>
+
+        <p className="login-footer">
+          Tu espacio personal para organizar tus tareas.
+        </p>
+
+      </div>
     </div>
-  </div>
-)
+  )
 }
+
 export default Login
