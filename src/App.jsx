@@ -1854,9 +1854,18 @@ const vaciarPapelera = async () => {
 
       mostrarMensaje('✓ Notificaciones activadas correctamente')
     } catch (error) {
-      console.error('Error al activar notificaciones:', error)
-      mostrarMensaje('⚠ No se pudieron activar las notificaciones.', 'error')
-    } finally {
+  console.error('Error al activar notificaciones:', error)
+
+  const detalleError =
+    error?.message ||
+    error?.name ||
+    'Error desconocido'
+
+  mostrarMensaje(
+    `⚠ Error al activar notificaciones: ${detalleError}`,
+    'error'
+  )
+} finally {
       setActivandoNotificaciones(false)
     }
   }
