@@ -4,6 +4,8 @@ import fondo from './assets/fondo.jpg'
 import Login from './components/Login'
 import { supabase } from './lib/supabaseClient'
 
+//Actualizacion VAPIDD produccion
+
 function App() {
   const [usuario, setUsuario] = useState(null)
   const [cargandoSesion, setCargandoSesion] = useState(true)
