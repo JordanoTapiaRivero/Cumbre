@@ -8,6 +8,7 @@ function App() {
   const [usuario, setUsuario] = useState(null)
   const [cargandoSesion, setCargandoSesion] = useState(true)
   const formularioRef = useRef(null)
+  const temporizadorInactividadRef = useRef(null)
   const [splashActivo, setSplashActivo] = useState(true)
 
   const [tarea, setTarea] = useState('')
@@ -74,6 +75,144 @@ function App() {
     subscription.unsubscribe()
   }
 }, [])
+
+  /* =========================
+     CIERRE AUTOMÁTICO POR INACTIVIDAD
+  ========================= */
+
+  useEffect(() => {
+    if (!usuario) {
+      if (temporizadorInactividadRef.current) {
+        clearTimeout(temporizadorInactividadRef.current)
+        temporizadorInactividadRef.current = null
+      }
+
+      return
+    }
+
+    const TIEMPO_INACTIVIDAD = 5 * 60 * 1000
+    let cerrandoSesion = false
+
+    const cerrarSesionPorInactividad = async () => {
+      if (cerrandoSesion) return
+      cerrandoSesion = true
+
+      try {
+        if (
+          'Notification' in window &&
+          Notification.permission === 'granted' &&
+          'serviceWorker' in navigator
+        ) {
+          try {
+            const registro = await navigator.serviceWorker.ready
+
+            await registro.showNotification(
+              'Cumbre 🏔️ · Sesión expirada',
+              {
+                body:
+                  'Tu sesión se cerró por 5 minutos de inactividad. Inicia sesión nuevamente para continuar.',
+                icon: '/pwa-192x192.png',
+                badge: '/pwa-192x192.png',
+                tag: 'cumbre-sesion-expirada',
+                data: {
+                  url: '/',
+                },
+              }
+            )
+          } catch (errorNotificacion) {
+            console.error(
+              'Error al mostrar la notificación de sesión expirada:',
+              errorNotificacion
+            )
+          }
+        }
+
+        const { error } = await supabase.auth.signOut()
+
+        if (error) {
+          throw error
+        }
+
+        setConfirmarCerrarSesion(false)
+        setMenuAbierto(false)
+        setUsuario(null)
+      } catch (error) {
+        cerrandoSesion = false
+
+        console.error(
+          'Error al cerrar la sesión por inactividad:',
+          error
+        )
+      }
+    }
+
+    const reiniciarTemporizador = () => {
+      if (cerrandoSesion) return
+
+      if (temporizadorInactividadRef.current) {
+        clearTimeout(temporizadorInactividadRef.current)
+      }
+
+      temporizadorInactividadRef.current = setTimeout(
+        cerrarSesionPorInactividad,
+        TIEMPO_INACTIVIDAD
+      )
+    }
+
+    const registrarActividad = () => {
+      reiniciarTemporizador()
+    }
+
+    const manejarVisibilidad = () => {
+      if (document.visibilityState === 'visible') {
+        reiniciarTemporizador()
+      }
+    }
+
+    const eventosActividad = [
+      'mousemove',
+      'mousedown',
+      'keydown',
+      'scroll',
+      'touchstart',
+      'click',
+    ]
+
+    eventosActividad.forEach((evento) => {
+      window.addEventListener(
+        evento,
+        registrarActividad,
+        { passive: true }
+      )
+    })
+
+    document.addEventListener(
+      'visibilitychange',
+      manejarVisibilidad
+    )
+
+    reiniciarTemporizador()
+
+    return () => {
+      if (temporizadorInactividadRef.current) {
+        clearTimeout(temporizadorInactividadRef.current)
+        temporizadorInactividadRef.current = null
+      }
+
+      eventosActividad.forEach((evento) => {
+        window.removeEventListener(
+          evento,
+          registrarActividad
+        )
+      })
+
+      document.removeEventListener(
+        'visibilitychange',
+        manejarVisibilidad
+      )
+    }
+  }, [usuario])
+
 useEffect(() => {
   if (!usuario) {
     setTareas([])
